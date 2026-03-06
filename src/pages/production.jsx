@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import axios from "axios";
 import {
   Search,
   ChevronDown,
@@ -26,7 +27,7 @@ function calcServings(dish, stock) {
   let limiter = "";
   let missingIngredients = [];
 
-  dish.recipe.forEach(({ ingredient, qty }) => {
+  dish.recipe.forEach(({ ingredient, qty, wasteBuffer }) => {
     const inv = stock.find((s) => s.name === ingredient);
     if (!inv || inv.currentStock === 0) {
       missingIngredients.push(ingredient);
@@ -34,7 +35,8 @@ function calcServings(dish, stock) {
       limiter = ingredient;
       return;
     }
-    const possible = Math.floor(inv.currentStock / qty);
+    const effectiveQty = qty * (1 + (wasteBuffer || 0) / 100);
+    const possible = Math.floor(inv.currentStock / effectiveQty);
     if (possible < min) {
       min = possible;
       limiter = ingredient;
@@ -53,10 +55,21 @@ function getServingStatus(servings) {
   return "ok";
 }
 
+function getExpiryStatus(expiryDate) {
+  if (!expiryDate) return "Fresh";
+  const days = Math.ceil((new Date(expiryDate) - new Date()) / 86400000);
+  if (days <= 0) return "Expired";
+  if (days <= 3) return `Expires in ${days} day${days > 1 ? "s" : ""}`;
+  return "Fresh";
+}
+
 function getExpiryWarning(dish, stock) {
   for (const { ingredient } of dish.recipe) {
     const inv = stock.find((s) => s.name === ingredient);
-    if (inv && inv.expiry !== "Fresh") return `${ingredient} expiring`;
+    if (inv && inv.expiryDate) {
+      const status = getExpiryStatus(inv.expiryDate);
+      if (status !== "Fresh") return `${ingredient} expiring`;
+    }
   }
   return null;
 }
@@ -75,21 +88,22 @@ function getSharedWith(dish, allDishes) {
 
 // ── AI helper via OpenRouter ──────────────────────────────────────────────────
 async function askAI(prompt) {
-  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
-      "HTTP-Referer": "http://localhost:5173",
-      "X-Title": "Kopi Nusantara Production",
-    },
-    body: JSON.stringify({
-      model: "openai/gpt-4o-mini",
+  const response = await axios.post(
+    "https://openrouter.ai/api/v1/chat/completions",
+    {
+      model: "nousresearch/hermes-3-llama-3.1-405b:free",
       messages: [{ role: "user", content: prompt }],
-    }),
-  });
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content || "";
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "http://localhost:5173",
+        "X-Title": "Kopi Nusantara Production",
+      },
+    },
+  );
+  return response.data.choices[0].message.content;
 }
 
 // ── Sub-pages ─────────────────────────────────────────────────────────────────
@@ -479,12 +493,29 @@ function Planning({ dishes, stock }) {
   const handleAI = async () => {
     setAiLoading(true);
     setAiResult("");
+
     const plan = dishes
       .map((d) => `${d.name}: ${targets[d.id] || 0} servings`)
       .join(", ");
-    const stockSummary = stock
-      .map((s) => `${s.name}: ${s.currentStock} ${s.unit}`)
+
+    const lowStock = stock
+      .filter((s) => s.status === "Low" || s.status === "Out")
+      .map((s) => `${s.name}: ${s.currentStock} ${s.unit} (${s.status})`)
       .join(", ");
+
+    const expiringStock = stock
+      .filter((s) => s.expiryDate)
+      .map((s) => {
+        const days = Math.ceil(
+          (new Date(s.expiryDate) - new Date()) / 86400000,
+        );
+        return days <= 3
+          ? `${s.name} expires in ${days} day${days > 1 ? "s" : ""}`
+          : null;
+      })
+      .filter(Boolean)
+      .join(", ");
+
     const conflictStr = conflicts
       .map(([n, { total, unit }]) => {
         const inv = stock.find((s) => s.name === n);
@@ -492,19 +523,37 @@ function Planning({ dishes, stock }) {
       })
       .join("; ");
 
-    const prompt = `You are a coffee shop production planner assistant. 
-Production plan: ${plan}. 
-Current stock: ${stockSummary}. 
-${conflictStr ? `Conflicts: ${conflictStr}.` : "No conflicts."}
-Give a brief, practical summary: list ingredient requirements, flag any conflicts, and suggest adjustments or purchase needs. Be concise (max 150 words).`;
+    const promptText = [
+      "You are a coffee shop production planner. Give practical recommendations based on current stock.",
+      "",
+      `Production plan: ${plan || "none set"}.`,
+      `Low or out of stock: ${lowStock || "none"}.`,
+      `Expiring soon: ${expiringStock || "none"}.`,
+      conflictStr ? `Stock conflicts: ${conflictStr}.` : "No stock conflicts.",
+      "",
+      "Recommendations needed:",
+      "1. Which dishes to prioritize TODAY",
+      "2. Which ingredients need urgent restocking and how much",
+      "3. Any expiring ingredients to use up first",
+      "Keep it under 120 words, practical and direct.",
+    ].join("\n");
 
     try {
-      const result = await askAI(prompt);
+      const result = await askAI(promptText);
       setAiResult(result);
     } catch {
       setAiResult("AI unavailable. Please check your connection.");
     }
     setAiLoading(false);
+  };
+
+  const handleWhatsApp = () => {
+    if (Object.entries(ingredientUsage).length === 0) return;
+    const lines = Object.entries(ingredientUsage)
+      .map(([name, { total, unit }]) => `- ${name}: ${total} ${unit}`)
+      .join("%0A");
+    const msg = `*Purchase Request - Kopi Nusantara*%0A%0AIngredient Requirements:%0A${lines}`;
+    window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
 
   return (
@@ -625,6 +674,7 @@ Give a brief, practical summary: list ingredient requirements, flag any conflict
           <button
             className="inv-btn inv-btn--whatsapp"
             style={{ width: "100%" }}
+            onClick={handleWhatsApp}
           >
             Send via WhatsApp
           </button>
@@ -834,12 +884,17 @@ function CreateDishModal({ stock, onClose, onSave }) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState("Coffee");
   const [yieldUnit, setYieldUnit] = useState("cup");
-  const [recipe, setRecipe] = useState([{ ingredient: "", qty: 0, unit: "g" }]);
+  const [recipe, setRecipe] = useState([
+    { ingredient: "", qty: 0, unit: "g", wasteBuffer: 0 },
+  ]);
   const [aiSuggestion, setAiSuggestion] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
 
   const addIngredient = () =>
-    setRecipe((p) => [...p, { ingredient: "", qty: 0, unit: "g" }]);
+    setRecipe((p) => [
+      ...p,
+      { ingredient: "", qty: 0, unit: "g", wasteBuffer: 0 },
+    ]);
   const removeIngredient = (i) =>
     setRecipe((p) => p.filter((_, idx) => idx !== i));
   const updateIngredient = (i, field, val) =>
@@ -951,6 +1006,7 @@ Suggest: 1) Any unit conversions needed, 2) A recommended waste buffer % for fre
                   <th>Ingredient</th>
                   <th>Quantity</th>
                   <th>Unit</th>
+                  <th>Waste Buffer %</th>
                   <th></th>
                 </tr>
               </thead>
@@ -1008,6 +1064,19 @@ Suggest: 1) Any unit conversions needed, 2) A recommended waste buffer % for fre
                           ),
                         )}
                       </select>
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        className="prod-qty-input"
+                        value={r.wasteBuffer || ""}
+                        min={0}
+                        max={50}
+                        placeholder="0"
+                        onChange={(e) =>
+                          updateIngredient(i, "wasteBuffer", e.target.value)
+                        }
+                      />
                     </td>
                     <td>
                       <button

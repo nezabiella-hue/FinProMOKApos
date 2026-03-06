@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Search, ChevronDown, X, Package } from "lucide-react";
 import {
-  inventoryItems,
   categories,
   statusOptions,
   expiryOptions,
+  getExpiryStatus,
 } from "../data/mockinventory";
+import { initialDishes } from "../data/mockproduction";
 import StockOpnameModal from "../Components/StockOpnameModal";
 import "../App.css";
 
@@ -25,8 +26,8 @@ export default function Inventory({ stock, setStock }) {
       statusFilter === "All Status" || item.status === statusFilter;
     const matchExpiry =
       expiryFilter === "All Expiry" ||
-      (expiryFilter === "Fresh" && item.expiry === "Fresh") ||
-      (expiryFilter === "Expiring Soon" && item.expiry !== "Fresh");
+      (expiryFilter === "Fresh" && getExpiryStatus(item.expiryDate) === "Fresh") ||
+      (expiryFilter === "Expiring Soon" && getExpiryStatus(item.expiryDate) !== "Fresh");
     return matchSearch && matchCategory && matchStatus && matchExpiry;
   });
 
@@ -54,8 +55,8 @@ export default function Inventory({ stock, setStock }) {
     return "inv-badge inv-badge--ok";
   };
 
-  const getExpiryClass = (expiry) =>
-    expiry !== "Fresh" ? "inv-expiry--warn" : "";
+  const getExpiryClass = (expiryDate) =>
+    getExpiryStatus(expiryDate) !== "Fresh" ? "inv-expiry--warn" : "";
 
   return (
     <div className="inv-wrap">
@@ -163,7 +164,7 @@ export default function Inventory({ stock, setStock }) {
                     {item.status}
                   </span>
                 </td>
-                <td className={getExpiryClass(item.expiry)}>{item.expiry}</td>
+                <td className={getExpiryClass(item.expiryDate)}>{getExpiryStatus(item.expiryDate)}</td>
                 <td className="inv-td-muted">{item.usedBy.join(", ")}</td>
                 <td className="inv-td-muted">{item.lastOpname}</td>
                 <td>
@@ -233,12 +234,28 @@ export default function Inventory({ stock, setStock }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {selectedItem.affectedDishes.map((d) => (
-                      <tr key={d.dish}>
-                        <td>{d.dish}</td>
-                        <td>can make {d.remaining} more</td>
-                      </tr>
-                    ))}
+                    {initialDishes
+                      .filter((d) =>
+                        d.recipe.some(
+                          (r) => r.ingredient === selectedItem.name,
+                        ),
+                      )
+                      .map((dish) => {
+                        const recipeEntry = dish.recipe.find(
+                          (r) => r.ingredient === selectedItem.name,
+                        );
+                        const remaining = recipeEntry
+                          ? Math.floor(
+                              selectedItem.currentStock / recipeEntry.qty,
+                            )
+                          : 0;
+                        return (
+                          <tr key={dish.name}>
+                            <td>{dish.name}</td>
+                            <td>can make {remaining} more</td>
+                          </tr>
+                        );
+                      })}
                   </tbody>
                 </table>
               </section>
