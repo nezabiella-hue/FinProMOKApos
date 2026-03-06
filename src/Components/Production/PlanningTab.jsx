@@ -7,11 +7,35 @@
 import { useState, useMemo } from "react";
 import { Sparkles, AlertTriangle, TriangleAlert } from "lucide-react";
 import { askAI } from "../../services/aiService";
-import { calcServings, getExpiryStatus } from "../../utils/productionHelpers";
+import { calcServings } from "../../utils/productionHelpers";
+
+// ── Try to extract JSON from AI response, even if wrapped in markdown ─────────
+function parseAIResponse(raw) {
+  // 1. Strip markdown code fences
+  let clean = raw.replace(/```json|```/gi, "").trim();
+
+  // 2. Try parsing directly
+  try {
+    return { ok: true, data: JSON.parse(clean) };
+  } catch {
+    // 3. Try to find a JSON object anywhere in the string
+    const match = clean.match(/\{[\s\S]*\}/);
+    if (match) {
+      try {
+        return { ok: true, data: JSON.parse(match[0]) };
+      } catch {
+        // fall through
+      }
+    }
+    // 4. Return raw text as fallback so we still show something
+    return { ok: false, rawText: raw };
+  }
+}
 
 export default function PlanningTab({ dishes, stock }) {
   const [targets, setTargets] = useState({});
-  const [aiResult, setAiResult] = useState(null); // { summary, recommendations: [{dishId, dishName, qty, reason}] }
+  const [aiResult, setAiResult] = useState(null);   // parsed JSON { summary, recommendations }
+  const [aiRawText, setAiRawText] = useState("");    // fallback if JSON parse fails
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
   const [appliedAI, setAppliedAI] = useState(false);
@@ -53,9 +77,7 @@ export default function PlanningTab({ dishes, stock }) {
     const expiring = stock
       .filter((s) => s.expiryDate)
       .map((s) => {
-        const days = Math.ceil(
-          (new Date(s.expiryDate) - new Date()) / 86400000,
-        );
+        const days = Math.ceil((new Date(s.expiryDate) - new Date()) / 86400000);
         return days <= 3 ? `${s.name} (${days}d left)` : null;
       })
       .filter(Boolean);
@@ -72,13 +94,12 @@ export default function PlanningTab({ dishes, stock }) {
   const handleAI = async () => {
     setAiLoading(true);
     setAiResult(null);
+    setAiRawText("");
     setAiError("");
 
     const dishList = dishes.map((d) => `id:${d.id} "${d.name}"`).join(", ");
 
     const promptText = [
-      "You are a coffee shop production planner AI. Analyze the stock situation and recommend how many of each dish to produce today.",
-      "",
       `Available dishes: ${dishList}`,
       `Current capacity (max servings from stock): ${stockContext.capacity.join("; ")}`,
       `Low/Out of stock ingredients: ${stockContext.low.length ? stockContext.low.join(", ") : "none"}`,
@@ -87,20 +108,28 @@ export default function PlanningTab({ dishes, stock }) {
       "Rules:",
       "- Prioritize dishes that use expiring ingredients",
       "- Do not recommend more than the max capacity for each dish",
-      "- Reduce quantities for dishes with low/out ingredients",
-      "- Keep recommendations realistic for a daily coffee shop run",
+      "- Reduce quantities for dishes with low/out stock ingredients",
+      "- Keep quantities realistic for a daily coffee shop run",
       "",
-      "Respond ONLY with valid JSON in this exact format, no explanation, no markdown:",
-      '{"summary":"one sentence overview","recommendations":[{"dishId":1,"dishName":"Caramel Latte","qty":10,"reason":"brief reason"},...]}'
+      'Respond ONLY with this JSON format (no markdown, no explanation outside JSON):',
+      '{"summary":"one sentence overview of today\'s situation","recommendations":[{"dishId":1,"dishName":"Caramel Latte","qty":10,"reason":"brief reason why this quantity"}]}',
     ].join("\n");
 
     try {
       const raw = await askAI(promptText);
-      const clean = raw.replace(/```json|```/g, "").trim();
-      const parsed = JSON.parse(clean);
-      setAiResult(parsed);
-    } catch {
-      setAiError("AI unavailable or returned an unexpected response. Try again.");
+      const { ok, data, rawText } = parseAIResponse(raw);
+      if (ok) {
+        setAiResult(data);
+      } else {
+        // Model returned text instead of JSON — show it as plain text
+        setAiRawText(rawText);
+      }
+    } catch (err) {
+      setAiError(
+        err?.response?.status === 402
+          ? "OpenRouter credits required. Top up at openrouter.ai/credits or switch to a free model in aiService.js."
+          : "AI unavailable. Check your connection or API key.",
+      );
     }
     setAiLoading(false);
   };
@@ -136,7 +165,7 @@ export default function PlanningTab({ dishes, stock }) {
           <div>
             <h2 className="inv-card-title">Production Planning</h2>
             <p className="inv-card-sub">
-              Set target quantities manually, or let AI recommend based on stock.
+              Set target quantities manually, or click <strong>Run AI Analysis</strong> to get a recommendation based on current stock.
             </p>
           </div>
           <button
@@ -179,17 +208,12 @@ export default function PlanningTab({ dishes, stock }) {
             {dishes.map((d) => {
               const qty = targets[d.id] || 0;
               const usage =
-                d.recipe
-                  ?.map((r) => `${r.ingredient}: ${r.qty * qty}${r.unit}`)
-                  .join(", ") || "—";
+                d.recipe?.map((r) => `${r.ingredient}: ${r.qty * qty}${r.unit}`).join(", ") || "—";
               const hasConflict = conflicts.some(([name]) =>
                 d.recipe?.some((r) => r.ingredient === name),
               );
               return (
-                <tr
-                  key={d.id}
-                  style={hasConflict && qty > 0 ? { background: "#fff7ed" } : {}}
-                >
+                <tr key={d.id} style={hasConflict && qty > 0 ? { background: "#fff7ed" } : {}}>
                   <td className="inv-td-bold">
                     {d.name}
                     {hasConflict && qty > 0 && (
@@ -232,11 +256,8 @@ export default function PlanningTab({ dishes, stock }) {
                 </div>
               ))}
               {stockContext.expiring.map((s) => (
-                <div
-                  key={s}
-                  className="prod-conflict-item"
-                  style={{ background: "#fffbeb", color: "#92400e" }}
-                >
+                <div key={s} className="prod-conflict-item"
+                  style={{ background: "#fffbeb", color: "#92400e" }}>
                   <AlertTriangle size={13} /> {s}
                 </div>
               ))}
@@ -256,10 +277,7 @@ export default function PlanningTab({ dishes, stock }) {
               const inv = stock.find((s) => s.name === name);
               const ok = inv && inv.currentStock >= total;
               return (
-                <div
-                  key={name}
-                  className={`prod-usage-item ${ok ? "" : "prod-usage-item--warn"}`}
-                >
+                <div key={name} className={`prod-usage-item ${ok ? "" : "prod-usage-item--warn"}`}>
                   <span>{name}</span>
                   <span>{total} {unit}</span>
                 </div>
@@ -268,7 +286,7 @@ export default function PlanningTab({ dishes, stock }) {
           )}
         </div>
 
-        {/* AI loading state */}
+        {/* Loading */}
         {aiLoading && (
           <div className="prod-ai-result" style={{ textAlign: "center", color: "#6b7280" }}>
             <Sparkles size={16} style={{ margin: "0 auto 0.4rem", display: "block" }} />
@@ -276,21 +294,18 @@ export default function PlanningTab({ dishes, stock }) {
           </div>
         )}
 
-        {/* AI error */}
+        {/* Error */}
         {aiError && (
           <div style={{
-            background: "#fee2e2",
-            border: "1px solid #fecaca",
-            borderRadius: "8px",
-            padding: "0.75rem",
-            fontSize: "0.82rem",
-            color: "#991b1b",
+            background: "#fee2e2", border: "1px solid #fecaca",
+            borderRadius: "8px", padding: "0.75rem",
+            fontSize: "0.82rem", color: "#991b1b",
           }}>
             {aiError}
           </div>
         )}
 
-        {/* AI result with per-dish cards + Apply button */}
+        {/* Structured JSON result — per-dish cards + Apply button */}
         {aiResult && (
           <div className="prod-ai-result">
             <div className="inv-ai-header">
@@ -302,16 +317,10 @@ export default function PlanningTab({ dishes, stock }) {
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", marginBottom: "0.75rem" }}>
               {aiResult.recommendations?.map(({ dishId, dishName, qty, reason }) => (
-                <div
-                  key={dishId}
-                  style={{
-                    background: "white",
-                    border: "1px solid #bfdbfe",
-                    borderRadius: "6px",
-                    padding: "0.5rem 0.75rem",
-                    fontSize: "0.8rem",
-                  }}
-                >
+                <div key={dishId} style={{
+                  background: "white", border: "1px solid #bfdbfe",
+                  borderRadius: "6px", padding: "0.5rem 0.75rem", fontSize: "0.8rem",
+                }}>
                   <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, color: "#1e40af" }}>
                     <span>{dishName}</span>
                     <span>{qty} servings</span>
@@ -329,6 +338,19 @@ export default function PlanningTab({ dishes, stock }) {
             >
               <Sparkles size={13} /> Apply to Plan
             </button>
+          </div>
+        )}
+
+        {/* Fallback: model returned text instead of JSON */}
+        {aiRawText && (
+          <div className="prod-ai-result">
+            <div className="inv-ai-header">
+              <Sparkles size={14} className="inv-ai-icon" />
+              <span className="inv-ai-title">AI Suggestion</span>
+            </div>
+            <p className="prod-ai-text" style={{ whiteSpace: "pre-wrap" }}>
+              {aiRawText}
+            </p>
           </div>
         )}
 
