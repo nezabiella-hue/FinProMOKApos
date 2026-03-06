@@ -1,4 +1,13 @@
-// mockinventory.js — Coffee Shop Inventory
+// mockinventory.js
+// BEFORE opname: all stocks are healthy, no Low status, no expiry warnings.
+// AFTER applying mockupdate.js via Stock Opname, actual counts reveal:
+//   - Matcha Powder → Low
+//   - Caramel Syrup → Low
+//   - Vanilla Syrup → Low
+//   - Croissant Dough → Low + expires tomorrow
+//   - Fresh Milk → expires in 2 days
+//   - Whipped Cream → Low + expires in 2 days
+// This cascades into Production: serving counts drop, alerts fire.
 
 export const getExpiryStatus = (expiryDate) => {
   if (!expiryDate) return "Fresh";
@@ -24,67 +33,67 @@ export const inventoryItems = [
     status: "OK",
     expiryDate: null,
     usedBy: ["Espresso", "Caramel Latte", "Cappuccino", "Iced Americano"],
-    lastOpname: "Today",
+    lastOpname: "3 days ago",
     batches: [
-      { label: "Batch A", amount: 1500, unit: "g", age: "Purchased 3 days ago" },
-      { label: "Batch B", amount: 900, unit: "g", age: "Purchased today" },
+      { label: "Batch A", amount: 1500, unit: "g", age: "Purchased 5 days ago" },
+      { label: "Batch B", amount: 900, unit: "g", age: "Purchased 3 days ago" },
     ],
   },
   {
     id: 2,
     name: "Fresh Milk",
-    currentStock: 3200,
+    currentStock: 4000,
     unit: "ml",
     category: "Dairy",
     status: "OK",
-    expiryDate: daysFromNow(2),
+    expiryDate: null, // expiry revealed after opname
     usedBy: ["Caramel Latte", "Matcha Latte", "Cappuccino"],
-    lastOpname: "Yesterday",
+    lastOpname: "3 days ago",
     batches: [
-      { label: "Batch A", amount: 2000, unit: "ml", age: "Purchased 2 days ago" },
-      { label: "Batch B", amount: 1200, unit: "ml", age: "Purchased today" },
+      { label: "Batch A", amount: 2500, unit: "ml", age: "Purchased 4 days ago" },
+      { label: "Batch B", amount: 1500, unit: "ml", age: "Purchased 2 days ago" },
     ],
   },
   {
     id: 3,
     name: "Matcha Powder",
-    currentStock: 180,
+    currentStock: 500,
     unit: "g",
     category: "Bahan Baku",
-    status: "Low",
+    status: "OK",
     expiryDate: null,
     usedBy: ["Matcha Latte"],
-    lastOpname: "Today",
+    lastOpname: "3 days ago",
     batches: [
-      { label: "Batch A", amount: 180, unit: "g", age: "Purchased 1 day ago" },
+      { label: "Batch A", amount: 500, unit: "g", age: "Purchased 3 days ago" },
     ],
   },
   {
     id: 4,
     name: "Caramel Syrup",
-    currentStock: 500,
+    currentStock: 900,
     unit: "ml",
     category: "Syrup",
-    status: "Low",
+    status: "OK",
     expiryDate: null,
     usedBy: ["Caramel Latte"],
-    lastOpname: "2 days ago",
+    lastOpname: "3 days ago",
     batches: [
-      { label: "Batch A", amount: 500, unit: "ml", age: "Purchased 3 days ago" },
+      { label: "Batch A", amount: 900, unit: "ml", age: "Purchased 4 days ago" },
     ],
   },
   {
     id: 5,
     name: "Croissant Dough",
-    currentStock: 12,
+    currentStock: 30,
     unit: "pcs",
     category: "Pastry",
-    status: "Low",
-    expiryDate: daysFromNow(1),
+    status: "OK",
+    expiryDate: null, // expiry revealed after opname
     usedBy: ["Croissant"],
-    lastOpname: "Today",
+    lastOpname: "3 days ago",
     batches: [
-      { label: "Batch A", amount: 12, unit: "pcs", age: "Purchased today" },
+      { label: "Batch A", amount: 30, unit: "pcs", age: "Purchased 3 days ago" },
     ],
   },
   {
@@ -96,7 +105,7 @@ export const inventoryItems = [
     status: "OK",
     expiryDate: null,
     usedBy: ["Muffin"],
-    lastOpname: "Yesterday",
+    lastOpname: "3 days ago",
     batches: [
       { label: "Batch A", amount: 500, unit: "g", age: "Purchased 4 days ago" },
       { label: "Batch B", amount: 300, unit: "g", age: "Purchased 1 day ago" },
@@ -110,7 +119,7 @@ export const inventoryItems = [
     category: "Bahan Baku",
     status: "OK",
     expiryDate: null,
-    usedBy: ["Caramel Latte", "Matcha Latte", "Cappuccino"],
+    usedBy: ["Caramel Latte", "Matcha Latte", "Cappuccino", "Muffin"],
     lastOpname: "3 days ago",
     batches: [
       { label: "Batch A", amount: 5000, unit: "g", age: "Purchased 5 days ago" },
@@ -125,7 +134,7 @@ export const inventoryItems = [
     status: "OK",
     expiryDate: null,
     usedBy: ["Iced Americano"],
-    lastOpname: "Today",
+    lastOpname: "3 days ago",
     batches: [
       { label: "Batch A", amount: 200, unit: "pcs", age: "Made today" },
     ],
@@ -133,29 +142,29 @@ export const inventoryItems = [
   {
     id: 9,
     name: "Whipped Cream",
-    currentStock: 600,
+    currentStock: 900,
     unit: "ml",
     category: "Dairy",
     status: "OK",
-    expiryDate: daysFromNow(2),
+    expiryDate: null, // expiry revealed after opname
     usedBy: ["Cappuccino", "Caramel Latte"],
-    lastOpname: "Yesterday",
+    lastOpname: "3 days ago",
     batches: [
-      { label: "Batch A", amount: 600, unit: "ml", age: "Purchased 2 days ago" },
+      { label: "Batch A", amount: 900, unit: "ml", age: "Purchased 3 days ago" },
     ],
   },
   {
     id: 10,
     name: "Vanilla Syrup",
-    currentStock: 300,
+    currentStock: 600,
     unit: "ml",
     category: "Syrup",
-    status: "Low",
+    status: "OK",
     expiryDate: null,
     usedBy: ["Caramel Latte"],
-    lastOpname: "2 days ago",
+    lastOpname: "3 days ago",
     batches: [
-      { label: "Batch A", amount: 300, unit: "ml", age: "Purchased 4 days ago" },
+      { label: "Batch A", amount: 600, unit: "ml", age: "Purchased 4 days ago" },
     ],
   },
   {
@@ -167,7 +176,7 @@ export const inventoryItems = [
     status: "OK",
     expiryDate: null,
     usedBy: ["Mocha"],
-    lastOpname: "Yesterday",
+    lastOpname: "3 days ago",
     batches: [
       { label: "Batch A", amount: 400, unit: "g", age: "Purchased 2 days ago" },
     ],
@@ -181,7 +190,7 @@ export const inventoryItems = [
     status: "OK",
     expiryDate: null,
     usedBy: ["All drinks"],
-    lastOpname: "Today",
+    lastOpname: "3 days ago",
     batches: [
       { label: "Batch A", amount: 150, unit: "pcs", age: "Purchased today" },
     ],
