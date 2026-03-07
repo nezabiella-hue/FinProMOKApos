@@ -13,9 +13,10 @@ const MODEL = "stepfun/step-3.5-flash:free";
 const API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 // Works on both localhost and Vercel
-const SITE_URL = typeof window !== "undefined"
-  ? window.location.origin
-  : "https://fin-pro-mok-apos.vercel.app";
+const SITE_URL =
+  typeof window !== "undefined"
+    ? window.location.origin
+    : "https://finpromokai.vercel.app/";
 
 const SYSTEM_PROMPT = `
 You are a production planning assistant for Kopi Nusantara, a coffee shop.
