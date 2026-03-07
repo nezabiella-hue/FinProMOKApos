@@ -1,6 +1,21 @@
+// services/aiService.js
+// ─────────────────────────────────────────────────────────
+// Central AI service. To swap models, change MODEL only.
+//
+// Current: stepfun/step-3.5-flash:free
+// Free fallbacks:
+//   "meta-llama/llama-3.1-8b-instruct:free"
+//   "mistralai/mistral-7b-instruct:free"
+// ─────────────────────────────────────────────────────────
 import axios from "axios";
+
 const MODEL = "stepfun/step-3.5-flash:free";
 const API_URL = "https://openrouter.ai/api/v1/chat/completions";
+
+// Works on both localhost and Vercel
+const SITE_URL = typeof window !== "undefined"
+  ? window.location.origin
+  : "https://fin-pro-mok-apos.vercel.app";
 
 const SYSTEM_PROMPT = `
 You are a production planning assistant for Kopi Nusantara, a coffee shop.
@@ -22,7 +37,7 @@ export async function askAI(userPrompt) {
       headers: {
         Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:5173",
+        "HTTP-Referer": SITE_URL,
         "X-Title": "Kopi Nusantara Production",
       },
     },
