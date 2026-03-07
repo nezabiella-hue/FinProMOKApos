@@ -1603,3 +1603,153 @@
   gap: 0.5rem;
   flex-wrap: wrap;
 }
+
+/* ─────────────────────────────────────────────────────────
+   TABLET RESPONSIVE (768px – 1024px)
+   ───────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  /* Sidebar collapses to icon-only on tablet */
+  .sidebar {
+    width: 64px;
+  }
+  .sidebar-logo {
+    font-size: 1.4rem;
+    padding: 1.25rem 0 0.5rem;
+    justify-content: center;
+  }
+  .sidebar-branch,
+  .sidebar-label,
+  .sidebar-chevron,
+  .sidebar-toggle span {
+    display: none;
+  }
+  .sidebar-item,
+  .sidebar-toggle {
+    justify-content: center;
+    padding: 0.65rem;
+  }
+  .sidebar-children {
+    display: none;
+  }
+
+  /* Reduce page padding */
+  .db-wrap,
+  .inv-wrap {
+    padding: 1.25rem;
+  }
+
+  /* Dashboard cards: 2 columns */
+  .db-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Charts stack */
+  .db-charts {
+    grid-template-columns: 1fr;
+  }
+
+  /* Planning layout stacks */
+  .prod-planning-layout {
+    flex-direction: column;
+  }
+  .prod-ai-sidebar {
+    width: 100%;
+    position: static;
+  }
+
+  /* Drawer narrower */
+  .inv-drawer {
+    width: 360px;
+  }
+
+  /* Modal narrower */
+  .inv-modal {
+    max-width: 95vw;
+  }
+
+  /* Table font slightly smaller */
+  .inv-table {
+    font-size: 0.8rem;
+  }
+  .inv-table th,
+  .inv-table td {
+    padding: 0.5rem 0.65rem;
+  }
+
+  /* Card header wraps */
+  .inv-card-header {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  /* Toolbar wraps */
+  .inv-toolbar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   MOBILE BLOCKER
+   Shown when screen < 768px, hides the app entirely.
+   ───────────────────────────────────────────────────────── */
+
+.mobile-blocker {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #1e2a38;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.mobile-blocker-icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.mobile-blocker-title {
+  font-family: "DM Serif Display", serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #ffffff;
+  margin: 0;
+}
+
+.mobile-blocker-sub {
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.9rem;
+  color: #a0aec0;
+  margin: 0;
+  max-width: 280px;
+  line-height: 1.6;
+}
+
+.mobile-blocker-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #2d3f52;
+  color: #63b3ed;
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid #3d5268;
+}
+
+@media (max-width: 767px) {
+  .mobile-blocker {
+    display: flex;
+  }
+  .app-layout {
+    display: none;
+  }
+}
