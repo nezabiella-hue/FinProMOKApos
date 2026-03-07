@@ -16,8 +16,10 @@
 .app-main {
   flex: 1;
   min-width: 0;
+  max-width: 100%;
   background-color: #f4f6f9;
   padding: 0;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 
@@ -218,7 +220,8 @@
   font-family: "DM Sans", sans-serif;
   width: 100%;
   max-width: 100%;
-  padding: 2rem;
+  box-sizing: border-box;
+  padding: 2rem 2rem 2rem 2rem;
   color: #1a2e22;
 }
 
@@ -316,7 +319,7 @@
 
 .db-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
   margin-bottom: 1rem;
 }
@@ -664,10 +667,12 @@
   display: flex;
   gap: 1.25rem;
   align-items: flex-start;
+  min-width: 0;
 }
 
 .prod-ai-sidebar {
-  width: 300px;
+  width: 280px;
+  min-width: 0;
   flex-shrink: 0;
   background: white;
   border-radius: 14px;
@@ -957,7 +962,8 @@
   font-family: "DM Sans", sans-serif;
   width: 100%;
   max-width: 100%;
-  padding: 2rem;
+  box-sizing: border-box;
+  padding: 2rem 2rem 2rem 2rem;
   color: #1a2e22;
 }
 
@@ -1096,6 +1102,12 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 0.85rem;
+  table-layout: fixed;
+  word-break: break-word;
+}
+
+.inv-card {
+  overflow-x: auto;
 }
 
 .inv-table th {

@@ -1,4 +1,12 @@
-// mockprofit.js — Coffee Shop POS Mock Data
+// data/mockprofit.js — Coffee Shop POS Mock Data
+// ─────────────────────────────────────────────────────────
+// dailySales: aggregated revenue per day
+// topProducts: monthly sales summary per dish
+// dailyDishSales: per-dish sales per day — used for:
+//   - AI production planning (how many to make tomorrow)
+//   - Purchase request generation (how much to reorder)
+//   - Usage error rate calculation (expected vs actual stock usage)
+// ─────────────────────────────────────────────────────────
 
 export const dailySales = [
   { date: "2024-03-01", grossSales: 1_820_000, netSales: 1_640_000, transactions: 42, cogs: 410_000 },
@@ -35,18 +43,68 @@ export const dailySales = [
 ];
 
 export const topProducts = [
-  { name: "Caramel Latte", sold: 312, revenue: 4_368_000, color: "#4e8c6e" },
-  { name: "Matcha Latte", sold: 278, revenue: 3_892_000, color: "#6aab89" },
-  { name: "Espresso", sold: 245, revenue: 2_450_000, color: "#8bc4a8" },
-  { name: "Croissant", sold: 198, revenue: 1_980_000, color: "#a8d5bf" },
+  { name: "Caramel Latte",  sold: 312, revenue: 4_368_000, color: "#4e8c6e" },
+  { name: "Matcha Latte",   sold: 278, revenue: 3_892_000, color: "#6aab89" },
+  { name: "Espresso",       sold: 245, revenue: 2_450_000, color: "#8bc4a8" },
+  { name: "Croissant",      sold: 198, revenue: 1_980_000, color: "#a8d5bf" },
   { name: "Iced Americano", sold: 187, revenue: 2_244_000, color: "#2d6a4f" },
-  { name: "Cappuccino", sold: 165, revenue: 2_475_000, color: "#1b4332" },
-  { name: "Muffin", sold: 143, revenue: 1_287_000, color: "#c8e6d7" },
+  { name: "Cappuccino",     sold: 165, revenue: 2_475_000, color: "#1b4332" },
+  { name: "Muffin",         sold: 143, revenue: 1_287_000, color: "#c8e6d7" },
 ];
 
+// ── Per-dish daily sales (last 3 days before opname) ─────────────────────────
+// Used for:
+//   1. Calculating expected ingredient usage → comparing to opname actual
+//   2. AI production planning ("sell X yesterday, make X today")
+//   3. AI purchase request ("used Y per day × reorder days = buy Z")
+export const dailyDishSales = [
+  {
+    date: "2024-03-29",
+    sales: {
+      "Caramel Latte": 28, "Matcha Latte": 25, "Espresso": 22,
+      "Croissant": 18, "Iced Americano": 17, "Cappuccino": 15, "Muffin": 12,
+    },
+  },
+  {
+    date: "2024-03-30",
+    sales: {
+      "Caramel Latte": 32, "Matcha Latte": 29, "Espresso": 26,
+      "Croissant": 21, "Iced Americano": 19, "Cappuccino": 17, "Muffin": 15,
+    },
+  },
+  {
+    date: "2024-03-31",
+    sales: {
+      "Caramel Latte": 30, "Matcha Latte": 27, "Espresso": 24,
+      "Croissant": 19, "Iced Americano": 18, "Cappuccino": 16, "Muffin": 14,
+    },
+  },
+];
+
+// ── Helper: get total sales per dish over last N days ─────────────────────────
+// Used by AI service to build purchase/production recommendations
+export function getDishSalesTotals(days = 3) {
+  const recent = dailyDishSales.slice(-days);
+  const totals = {};
+  recent.forEach(({ sales }) => {
+    Object.entries(sales).forEach(([dish, qty]) => {
+      totals[dish] = (totals[dish] || 0) + qty;
+    });
+  });
+  return totals;
+}
+
+// ── Helper: get average daily sales per dish ──────────────────────────────────
+export function getAvgDailySales(days = 3) {
+  const totals = getDishSalesTotals(days);
+  return Object.fromEntries(
+    Object.entries(totals).map(([dish, total]) => [dish, Math.round(total / days)])
+  );
+}
+
 export const dateRangePresets = [
-  { label: "Today", days: 1 },
-  { label: "Last 7 days", days: 7 },
-  { label: "Last 14 days", days: 14 },
-  { label: "This month", days: 31 },
+  { label: "Today",       days: 1  },
+  { label: "Last 7 days", days: 7  },
+  { label: "Last 14 days",days: 14 },
+  { label: "This month",  days: 31 },
 ];

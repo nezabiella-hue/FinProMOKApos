@@ -1,11 +1,17 @@
-// mockupdate.js — Simulated uploaded stock opname
-// AFTER applying this, inventory reveals real stock discrepancies:
+// data/mockupdate.js — Simulated uploaded stock opname
+//
+// SCENARIO: Physical count reveals stocks are lower than system records.
+// Key findings:
 //   - Matcha Powder: 500g → 120g (Low)
 //   - Caramel Syrup: 900ml → 150ml (Low)
 //   - Vanilla Syrup: 600ml → 120ml (Low)
-//   - Croissant Dough: 30pcs → 8pcs (Low) + expires tomorrow
+//   - Croissant Dough: 30pcs → 8pcs (Low) + already EXPIRED
 //   - Fresh Milk: 4000ml → 3200ml + expires in 2 days
 //   - Whipped Cream: 900ml → 180ml (Low) + expires in 2 days
+//
+// Note: usageErrorRate is now in mockUsageErrorRate.js
+// That file is separate so it can be edited independently for the
+// "usage error rate analysis" feature without touching opname data.
 
 const daysFromNow = (n) => {
   const d = new Date();
@@ -27,8 +33,8 @@ export const stockOpnameUpdate = [
     uploadedStock: 3200,
     unit: "ml",
     lowThreshold: 1000,
-    expiryDate: daysFromNow(2), // triggers expiry warning
-    notes: "Stock sufficient but check expiry date",
+    expiryDate: daysFromNow(2),
+    notes: "Expiry not tracked before — found during count. Expires in 2 days.",
   },
   {
     name: "Matcha Powder",
@@ -36,7 +42,7 @@ export const stockOpnameUpdate = [
     unit: "g",
     lowThreshold: 200,
     expiryDate: null,
-    notes: "Used more than recorded — urgent reorder",
+    notes: "Used more than recorded — urgent reorder needed",
   },
   {
     name: "Caramel Syrup",
@@ -44,15 +50,16 @@ export const stockOpnameUpdate = [
     unit: "ml",
     lowThreshold: 300,
     expiryDate: null,
-    notes: "Bottle nearly empty, usage not tracked daily",
+    notes: "Bottle nearly empty, daily usage not tracked properly",
   },
   {
     name: "Croissant Dough",
     uploadedStock: 8,
     unit: "pcs",
     lowThreshold: 15,
-    expiryDate: daysFromNow(1), // expires tomorrow
-    notes: "Several discarded — found expired during count",
+    expiryDate: daysFromNow(-1),
+    notes:
+      "Several discarded — already expired. System expiry date was incorrect.",
   },
   {
     name: "Muffin Mix",
@@ -68,7 +75,7 @@ export const stockOpnameUpdate = [
     unit: "g",
     lowThreshold: 500,
     expiryDate: null,
-    notes: "",
+    notes: "Slightly less used — customers opting for less sugar",
   },
   {
     name: "Ice Cubes",
@@ -83,8 +90,8 @@ export const stockOpnameUpdate = [
     uploadedStock: 180,
     unit: "ml",
     lowThreshold: 300,
-    expiryDate: daysFromNow(2), // expires in 2 days
-    notes: "Heavy usage over last 2 days, expiry approaching",
+    expiryDate: daysFromNow(2),
+    notes: "Heavy usage, hard to portion exactly. Expiry approaching.",
   },
   {
     name: "Vanilla Syrup",
@@ -92,7 +99,7 @@ export const stockOpnameUpdate = [
     unit: "ml",
     lowThreshold: 200,
     expiryDate: null,
-    notes: "Lower than expected",
+    notes: "Lower than expected — likely over-pouring",
   },
   {
     name: "Chocolate Powder",
