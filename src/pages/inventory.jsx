@@ -17,7 +17,7 @@ import { liveSteps } from "../data/mockLiveUpdate";
 import StockOpnameModal from "../Components/StockOpnameModal";
 import "../App.css";
 
-export default function Inventory({ stock, setStock, liveStep, onLiveUpdate }) {
+export default function Inventory({ stock, setStock, liveStep, onLiveUpdate, onWhatsappNotify }) {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -419,6 +419,7 @@ export default function Inventory({ stock, setStock, liveStep, onLiveUpdate }) {
           inventory={stock}
           onClose={() => setShowModal(false)}
           onApply={handleApplyUpdate}
+          onWhatsappNotify={onWhatsappNotify}
         />
       )}
     </div>

@@ -1,5 +1,10 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap");
 
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ─── Root & Layout ───────────────────────────────────── */
 #root {
   width: 100%;
@@ -1420,6 +1425,7 @@
   flex-direction: column;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   overflow: hidden;
+  position: relative;
 }
 
 .inv-modal-header {
