@@ -8,6 +8,7 @@ import { useState, useMemo } from "react";
 import { Sparkles, AlertTriangle, TriangleAlert } from "lucide-react";
 import { askAI } from "../../services/aiService";
 import { calcServings } from "../../utils/productionHelpers";
+import { semiFinishedGoods } from "../../data/mockproduction";
 
 // ── Try to extract JSON from AI response, even if wrapped in markdown ─────────
 function parseAIResponse(raw) {
@@ -34,6 +35,9 @@ function parseAIResponse(raw) {
 
 export default function PlanningTab({ dishes, stock }) {
   const [targets, setTargets] = useState({});
+  const [prepTargets, setPrepTargets] = useState(
+    Object.fromEntries(semiFinishedGoods.map((sf) => [sf.id, 0]))
+  );
   const [aiResult, setAiResult] = useState(null);   // parsed JSON { summary, recommendations }
   const [aiRawText, setAiRawText] = useState("");    // fallback if JSON parse fails
   const [aiLoading, setAiLoading] = useState(false);
@@ -67,6 +71,24 @@ export default function PlanningTab({ dishes, stock }) {
       return !inv || inv.currentStock < total;
     });
   }, [ingredientUsage, stock]);
+
+  // ── semi-finished prep stock check ───────────────────
+  const prepConflicts = useMemo(() => {
+    const result = {};
+    semiFinishedGoods.forEach((sf) => {
+      const batches = prepTargets[sf.id] || 0;
+      if (!batches) return;
+      const shortfalls = [];
+      sf.recipe.forEach(({ ingredient, qty, wasteBuffer }) => {
+        const needed = qty * batches * (1 + (wasteBuffer || 0) / 100);
+        const inv = stock.find((s) => s.name === ingredient);
+        const have = inv?.currentStock ?? 0;
+        if (have < needed) shortfalls.push({ ingredient, needed: Math.ceil(needed), have, unit: inv?.unit || "" });
+      });
+      if (shortfalls.length) result[sf.id] = shortfalls;
+    });
+    return result;
+  }, [prepTargets, stock]);
 
   // ── stock health context passed to AI ─────────────────
   const stockContext = useMemo(() => {
@@ -240,6 +262,82 @@ export default function PlanningTab({ dishes, stock }) {
             })}
           </tbody>
         </table>
+
+        {/* ── Semi-Finished Prep section ── */}
+        <div style={{ borderTop: "1px solid #e5e7eb", marginTop: "1.5rem", paddingTop: "1.5rem" }}>
+          <div style={{ marginBottom: "0.75rem" }}>
+            <h3 className="inv-card-title" style={{ fontSize: "1rem", marginBottom: "0.15rem" }}>
+              Semi-Finished Prep
+            </h3>
+            <p className="inv-card-sub">Plan batch production for prep items (dough, wrappers, sauces).</p>
+          </div>
+          <table className="inv-table">
+            <thead>
+              <tr>
+                <th>Prep Item</th>
+                <th>Yields per Batch</th>
+                <th>Batches to Make</th>
+                <th>Ingredients Needed</th>
+                <th>Stock OK?</th>
+              </tr>
+            </thead>
+            <tbody>
+              {semiFinishedGoods.map((sf) => {
+                const batches = prepTargets[sf.id] || 0;
+                const shortfalls = prepConflicts[sf.id];
+                const ingredientSummary = batches > 0
+                  ? sf.recipe
+                      .map(({ ingredient, qty, wasteBuffer, unit }) => {
+                        const total = Math.ceil(qty * batches * (1 + (wasteBuffer || 0) / 100));
+                        return `${total}${unit} ${ingredient}`;
+                      })
+                      .join(", ")
+                  : "—";
+                return (
+                  <tr key={sf.id} style={shortfalls ? { background: "#fff7ed" } : {}}>
+                    <td className="inv-td-bold">
+                      {sf.name}
+                      <span className="prod-cat-badge" style={{ marginLeft: "0.4rem", fontSize: "0.7rem" }}>
+                        {sf.category}
+                      </span>
+                    </td>
+                    <td className="inv-td-muted">{sf.yieldQty} {sf.yieldUnit}</td>
+                    <td>
+                      <input
+                        type="number"
+                        min={0}
+                        value={prepTargets[sf.id] || ""}
+                        placeholder="0"
+                        className="prod-qty-input"
+                        onChange={(e) =>
+                          setPrepTargets((p) => ({ ...p, [sf.id]: parseInt(e.target.value) || 0 }))
+                        }
+                      />
+                    </td>
+                    <td className="inv-td-muted" style={{ fontSize: "0.78rem" }}>
+                      {ingredientSummary}
+                    </td>
+                    <td>
+                      {batches === 0 ? (
+                        <span className="inv-td-muted">—</span>
+                      ) : shortfalls ? (
+                        <span style={{ color: "#991b1b", fontSize: "0.78rem" }}>
+                          {shortfalls.map((s) => (
+                            <div key={s.ingredient}>
+                              ⚠ {s.ingredient}: need {s.needed}{s.unit}, have {s.have}{s.unit}
+                            </div>
+                          ))}
+                        </span>
+                      ) : (
+                        <span style={{ color: "#166534", fontWeight: 600 }}>✓ Stock OK</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* ── Right: AI sidebar ── */}

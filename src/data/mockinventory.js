@@ -29,7 +29,7 @@ export const inventoryItems = [
     name: "Espresso Beans",
     currentStock: 2400,
     unit: "g",
-    category: "Bahan Baku",
+    category: "Raw Material",
     status: "OK",
     expiryDate: null,
     usedBy: ["Espresso", "Caramel Latte", "Cappuccino", "Iced Americano"],
@@ -42,7 +42,7 @@ export const inventoryItems = [
   {
     id: 2,
     name: "Fresh Milk",
-    currentStock: 4000,
+    currentStock: 6000,
     unit: "ml",
     category: "Dairy",
     status: "OK",
@@ -50,8 +50,8 @@ export const inventoryItems = [
     usedBy: ["Caramel Latte", "Matcha Latte", "Cappuccino"],
     lastOpname: "3 days ago",
     batches: [
-      { label: "Batch A", amount: 2500, unit: "ml", age: "Purchased 4 days ago" },
-      { label: "Batch B", amount: 1500, unit: "ml", age: "Purchased 2 days ago" },
+      { label: "Batch A", amount: 3500, unit: "ml", age: "Purchased 4 days ago" },
+      { label: "Batch B", amount: 2500, unit: "ml", age: "Purchased 2 days ago" },
     ],
   },
   {
@@ -59,7 +59,7 @@ export const inventoryItems = [
     name: "Matcha Powder",
     currentStock: 500,
     unit: "g",
-    category: "Bahan Baku",
+    category: "Raw Material",
     status: "OK",
     expiryDate: null,
     usedBy: ["Matcha Latte"],
@@ -116,7 +116,7 @@ export const inventoryItems = [
     name: "Sugar",
     currentStock: 5000,
     unit: "g",
-    category: "Bahan Baku",
+    category: "Raw Material",
     status: "OK",
     expiryDate: null,
     usedBy: ["Caramel Latte", "Matcha Latte", "Cappuccino", "Muffin"],
@@ -130,7 +130,7 @@ export const inventoryItems = [
     name: "Ice Cubes",
     currentStock: 200,
     unit: "pcs",
-    category: "Lainnya",
+    category: "Others",
     status: "OK",
     expiryDate: null,
     usedBy: ["Iced Americano"],
@@ -142,7 +142,7 @@ export const inventoryItems = [
   {
     id: 9,
     name: "Whipped Cream",
-    currentStock: 900,
+    currentStock: 2300,
     unit: "ml",
     category: "Dairy",
     status: "OK",
@@ -150,7 +150,8 @@ export const inventoryItems = [
     usedBy: ["Cappuccino", "Caramel Latte"],
     lastOpname: "3 days ago",
     batches: [
-      { label: "Batch A", amount: 900, unit: "ml", age: "Purchased 3 days ago" },
+      { label: "Batch A", amount: 1500, unit: "ml", age: "Purchased 3 days ago" },
+      { label: "Batch B", amount: 800, unit: "ml", age: "Purchased 1 day ago" },
     ],
   },
   {
@@ -172,7 +173,7 @@ export const inventoryItems = [
     name: "Chocolate Powder",
     currentStock: 400,
     unit: "g",
-    category: "Bahan Baku",
+    category: "Raw Material",
     status: "OK",
     expiryDate: null,
     usedBy: ["Mocha"],
@@ -195,8 +196,64 @@ export const inventoryItems = [
       { label: "Batch A", amount: 150, unit: "pcs", age: "Purchased today" },
     ],
   },
+  {
+    id: 13,
+    name: "All-Purpose Flour",
+    currentStock: 2000,
+    unit: "g",
+    category: "Raw Material",
+    status: "OK",
+    expiryDate: null,
+    usedBy: ["Croissant Dough", "Springroll Wrapper", "Muffin Batter"],
+    lastOpname: "3 days ago",
+    batches: [
+      { label: "Batch A", amount: 2000, unit: "g", age: "Purchased 2 days ago" },
+    ],
+  },
+  {
+    id: 14,
+    name: "Eggs",
+    currentStock: 24,
+    unit: "pcs",
+    category: "Raw Material",
+    status: "OK",
+    expiryDate: null,
+    usedBy: ["Springroll Wrapper", "Muffin Batter"],
+    lastOpname: "3 days ago",
+    batches: [
+      { label: "Batch A", amount: 24, unit: "pcs", age: "Purchased 1 day ago" },
+    ],
+  },
+  {
+    id: 15,
+    name: "Butter",
+    currentStock: 500,
+    unit: "g",
+    category: "Dairy",
+    status: "OK",
+    expiryDate: null,
+    usedBy: ["Croissant Dough", "Muffin Batter", "Caramel Sauce Base"],
+    lastOpname: "3 days ago",
+    batches: [
+      { label: "Batch A", amount: 500, unit: "g", age: "Purchased 3 days ago" },
+    ],
+  },
+  {
+    id: 16,
+    name: "Yeast",
+    currentStock: 20,
+    unit: "g",
+    category: "Raw Material",
+    status: "OK",
+    expiryDate: null,
+    usedBy: ["Croissant Dough"],
+    lastOpname: "3 days ago",
+    batches: [
+      { label: "Batch A", amount: 20, unit: "g", age: "Purchased 2 days ago" },
+    ],
+  },
 ];
 
-export const categories = ["All Categories", "Bahan Baku", "Dairy", "Syrup", "Pastry", "Packaging", "Lainnya"];
+export const categories = ["All Categories", "Raw Material", "Dairy", "Syrup", "Pastry", "Packaging", "Others"];
 export const statusOptions = ["All Status", "OK", "Low", "Out"];
 export const expiryOptions = ["All Expiry", "Fresh", "Expiring Soon"];
