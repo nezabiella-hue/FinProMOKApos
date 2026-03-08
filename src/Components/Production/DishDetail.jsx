@@ -1,9 +1,14 @@
 // components/Production/DishDetail.jsx
+import { useState } from "react";
 import { AlertTriangle } from "lucide-react";
-import { calcServings, getServingStatus, getExpiryWarning, getSharedWith } from "../../utils/productionHelpers";
+import { calcAllocatedServings, calcDishSalesVolumes, getServingStatus, getExpiryWarning, getSharedWith } from "../../utils/productionHelpers";
+import { saleTransactions } from "../../data/mockTransactions";
+import EditDishModal from "./EditDishModal";
 
-export default function DishDetail({ dish, stock, allDishes, onBack }) {
-  const { servings, limiter } = calcServings(dish, stock);
+export default function DishDetail({ dish, stock, allDishes, allocationOverrides = {}, onBack, onEditDish }) {
+  const [showEdit, setShowEdit] = useState(false);
+  const salesVolumes = calcDishSalesVolumes(saleTransactions);
+  const { servings, limiter, status } = calcAllocatedServings(dish, allDishes, stock, salesVolumes, allocationOverrides);
   const expiry = getExpiryWarning(dish, stock);
   const sharedWith = getSharedWith(dish, allDishes);
 
@@ -15,6 +20,9 @@ export default function DishDetail({ dish, stock, allDishes, onBack }) {
           <h2 className="inv-card-title" style={{ marginTop: "0.5rem" }}>{dish.name}</h2>
           <p className="inv-card-sub">{dish.category} · {dish.yieldUnit}</p>
         </div>
+        <button className="inv-btn inv-btn--outline" onClick={() => setShowEdit(true)}>
+          Edit Dish
+        </button>
       </div>
 
       <div className="prod-detail-body">
@@ -22,9 +30,9 @@ export default function DishDetail({ dish, stock, allDishes, onBack }) {
           <h3 className="inv-drawer-section-title">Overview</h3>
           <div className="inv-overview-grid">
             <div className="inv-overview-item">
-              <span className="inv-overview-label">Available Servings</span>
-              <span className={`prod-serving prod-serving--${getServingStatus(servings)}`}>
-                {servings} servings
+              <span className="inv-overview-label">Allocated Servings</span>
+              <span className={`prod-serving prod-serving--${status === "red" ? "out" : status === "ok" ? "ok" : "low"}`}>
+                {status === "red" ? "Out of stock" : status === "yellow" ? "0 — pool available" : `${servings} serving${servings !== 1 ? "s" : ""}${status === "low" ? " ⚠" : ""}`}
               </span>
             </div>
             <div className="inv-overview-item">
@@ -103,6 +111,18 @@ export default function DishDetail({ dish, stock, allDishes, onBack }) {
           </section>
         )}
       </div>
+
+      {showEdit && (
+        <EditDishModal
+          dish={dish}
+          stock={stock}
+          onClose={() => setShowEdit(false)}
+          onSave={(updatedDish) => {
+            if (onEditDish) onEditDish(updatedDish);
+            setShowEdit(false);
+          }}
+        />
+      )}
     </div>
   );
 }

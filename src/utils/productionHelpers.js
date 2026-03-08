@@ -70,3 +70,81 @@ export function getSharedWith(dish, allDishes) {
   });
   return [...sharedNames];
 }
+
+// ── Allocated servings system ─────────────────────────────
+// Replaces the naive per-dish calcServings for the DishList view.
+// Shared ingredients are distributed proportionally by sales volume.
+
+// Returns { "Caramel Latte": 84, "Cappuccino": 42, ... }
+export function calcDishSalesVolumes(saleTransactions) {
+  return saleTransactions.reduce((acc, { dish, qty }) => {
+    acc[dish] = (acc[dish] || 0) + qty;
+    return acc;
+  }, {});
+}
+
+// Distributes each shared ingredient's stock across dishes by sales volume weight.
+// overrides: { ingredientName: { dishName: deltaQty } } — additive adjustments from reallocation
+// Returns { "Fresh Milk": { "Caramel Latte": 1200, "Cappuccino": 600, ... }, ... }
+export function calcIngredientAllocations(dishes, stock, salesVolumes, overrides = {}) {
+  const result = {};
+
+  stock.forEach((item) => {
+    const users = dishes.filter((d) =>
+      d.recipe?.some((r) => r.ingredient === item.name)
+    );
+    if (users.length <= 1) return; // not shared — handled per-dish with full stock
+
+    const volumes = users.map((d) => salesVolumes[d.name] || 0);
+    const totalVolume = volumes.reduce((a, b) => a + b, 0);
+
+    result[item.name] = {};
+    users.forEach((d, i) => {
+      const weight = totalVolume > 0 ? volumes[i] / totalVolume : 1 / users.length;
+      const base = item.currentStock * weight;
+      const override = overrides[item.name]?.[d.name] || 0;
+      result[item.name][d.name] = Math.max(0, base + override);
+    });
+  });
+
+  return result;
+}
+
+// Computes allocated servings for a dish considering shared ingredient pools.
+// status:
+//   "ok"     — servings > 0
+//   "yellow" — servings === 0 but at least one ingredient pool is not empty
+//   "red"    — at least one ingredient currentStock === 0
+export function calcAllocatedServings(dish, dishes, stock, salesVolumes, overrides = {}) {
+  if (!dish.recipe || dish.recipe.length === 0)
+    return { servings: 0, limiter: "No recipe", status: "red" };
+
+  const allocations = calcIngredientAllocations(dishes, stock, salesVolumes, overrides);
+
+  let min = Infinity;
+  let limiter = "";
+
+  for (const { ingredient, qty, wasteBuffer } of dish.recipe) {
+    const inv = stock.find((s) => s.name === ingredient);
+
+    if (!inv || inv.currentStock === 0) {
+      return { servings: 0, limiter: ingredient, status: "red" };
+    }
+
+    const effectiveQty = qty * (1 + (wasteBuffer || 0) / 100);
+    const shared = allocations[ingredient];
+    const available = shared ? (shared[dish.name] ?? 0) : inv.currentStock;
+
+    const possible = Math.floor(available / effectiveQty);
+    if (possible < min) {
+      min = possible;
+      limiter = ingredient;
+    }
+  }
+
+  const servings = min === Infinity ? 0 : min;
+  // If we get here, no ingredient was at 0 stock
+  // "low" = 1–4 servings (warning), "yellow" = 0 but pool not empty, "ok" = 5+
+  const status = servings === 0 ? "yellow" : servings < 5 ? "low" : "ok";
+  return { servings, limiter, status };
+}

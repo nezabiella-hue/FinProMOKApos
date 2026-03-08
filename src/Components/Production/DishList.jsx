@@ -1,25 +1,60 @@
 // components/Production/DishList.jsx
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Search, ChevronDown, Plus, AlertTriangle, ChevronRight } from "lucide-react";
 import { dishCategories, availabilityOptions } from "../../data/mockproduction";
-import { calcServings, getServingStatus, getExpiryWarning, getSharedWith } from "../../utils/productionHelpers";
+import {
+  calcAllocatedServings,
+  calcDishSalesVolumes,
+  getExpiryWarning,
+  getSharedWith,
+} from "../../utils/productionHelpers";
+import { saleTransactions } from "../../data/mockTransactions";
 
-export default function DishList({ dishes, stock, onViewDetail, onCreateDish }) {
+export default function DishList({
+  dishes,
+  stock,
+  allocationOverrides = {},
+  onViewDetail,
+  onCreateDish,
+  onReallocate,
+  onLowServingWarn,
+}) {
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("All");
   const [availFilter, setAvailFilter] = useState("All");
 
+  const salesVolumes = useMemo(() => calcDishSalesVolumes(saleTransactions), []);
+
   const rows = useMemo(
     () =>
       dishes.map((d) => {
-        const { servings, limiter, missing } = calcServings(d, stock);
-        const status = getServingStatus(servings);
+        const { servings, limiter, status } = calcAllocatedServings(
+          d,
+          dishes,
+          stock,
+          salesVolumes,
+          allocationOverrides,
+        );
         const expiry = getExpiryWarning(d, stock);
         const sharedWith = getSharedWith(d, dishes);
-        return { ...d, servings, limiter, missing, status, expiry, sharedWith };
+        return { ...d, servings, limiter, status, expiry, sharedWith };
       }),
-    [dishes, stock],
+    [dishes, stock, salesVolumes, allocationOverrides],
   );
+
+  // Track warned dishes across re-renders so we only warn once per dish per session
+  const warnedDishes = useRef(new Set());
+
+  useEffect(() => {
+    const newlyLow = rows
+      .filter((r) => r.status === "low" && !warnedDishes.current.has(r.name))
+      .map((r) => r.name);
+
+    if (newlyLow.length > 0) {
+      newlyLow.forEach((name) => warnedDishes.current.add(name));
+      if (onLowServingWarn) onLowServingWarn(newlyLow);
+    }
+  }, [rows, onLowServingWarn]);
 
   const filtered = rows.filter((r) => {
     const matchSearch = r.name.toLowerCase().includes(search.toLowerCase());
@@ -27,8 +62,8 @@ export default function DishList({ dishes, stock, onViewDetail, onCreateDish }) 
     const matchAvail =
       availFilter === "All" ||
       (availFilter === "Available" && r.status === "ok") ||
-      (availFilter === "Low" && r.status === "low") ||
-      (availFilter === "Out of Stock" && r.status === "out");
+      (availFilter === "Low" && r.status === "yellow") ||
+      (availFilter === "Out of Stock" && r.status === "red");
     return matchSearch && matchCat && matchAvail;
   });
 
@@ -38,7 +73,7 @@ export default function DishList({ dishes, stock, onViewDetail, onCreateDish }) 
         <div>
           <h2 className="inv-card-title">Dish Production</h2>
           <p className="inv-card-sub">
-            Available servings calculated from current inventory stock.
+            Allocated servings distributed proportionally by sales volume.
           </p>
         </div>
         <button className="inv-btn inv-btn--primary" onClick={onCreateDish}>
@@ -75,7 +110,7 @@ export default function DishList({ dishes, stock, onViewDetail, onCreateDish }) 
           <tr>
             <th>Dish Name</th>
             <th>Category</th>
-            <th>Available Servings</th>
+            <th>Allocated Servings</th>
             <th>Limiting Ingredient</th>
             <th>Shared With</th>
             <th>Expiry Warning</th>
@@ -84,18 +119,45 @@ export default function DishList({ dishes, stock, onViewDetail, onCreateDish }) 
         </thead>
         <tbody>
           {filtered.map((row) => (
-            <tr key={row.id} className="prod-row" onClick={() => onViewDetail(row)}>
+            <tr
+              key={row.id}
+              className="prod-row"
+              onClick={() => onViewDetail(row)}
+            >
               <td className="inv-td-bold">{row.name}</td>
               <td><span className="prod-cat-badge">{row.category}</span></td>
               <td>
-                <span className={`prod-serving prod-serving--${row.status}`}>
-                  {row.servings} serving{row.servings !== 1 ? "s" : ""}
-                  {row.missing && <span className="prod-missing-flag"> ⚠ Missing stock</span>}
-                </span>
+                {row.status === "red" && (
+                  <span className="prod-serving prod-serving--out">
+                    Out of stock
+                  </span>
+                )}
+                {row.status === "yellow" && (
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <span className="prod-serving prod-serving--low">
+                      0 — pool available
+                    </span>
+                    <button
+                      className="inv-btn inv-btn--outline"
+                      style={{ fontSize: "0.72rem", padding: "0.2rem 0.5rem" }}
+                      onClick={(e) => { e.stopPropagation(); onReallocate && onReallocate(row); }}
+                    >
+                      Reallocate
+                    </button>
+                  </span>
+                )}
+                {row.status === "low" && (
+                  <span className="prod-serving prod-serving--low">
+                    {row.servings} serving{row.servings !== 1 ? "s" : ""} ⚠
+                  </span>
+                )}
+                {row.status === "ok" && (
+                  <span className="prod-serving prod-serving--ok">
+                    {row.servings} serving{row.servings !== 1 ? "s" : ""}
+                  </span>
+                )}
               </td>
-              <td className={row.missing ? "prod-limiter--missing" : "inv-td-muted"}>
-                {row.limiter}
-              </td>
+              <td className="inv-td-muted">{row.limiter}</td>
               <td className="inv-td-muted">
                 {row.sharedWith.length ? row.sharedWith.join(", ") : "—"}
               </td>

@@ -4,35 +4,25 @@ import {
   LayoutDashboard,
   BarChart2,
   BookOpen,
-  Salad,
   Package,
   Tv2,
   Users,
-  ChevronRight,
   ChevronLeft,
   ChefHat,
 } from "lucide-react";
 
 const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-  { label: "Reports", icon: BarChart2, path: "/reports" },
-  { label: "Library", icon: BookOpen },
-  {
-    label: "Ingredient",
-    icon: Salad,
-    expandable: true,
-    children: [
-      { label: "Inventory", path: "/inventory", icon: Package },
-      { label: "Production", path: "/production", icon: ChefHat },
-    ],
-  },
-  { label: "Online Channels", icon: Tv2 },
-  { label: "Customers", icon: Users },
+  { label: "Dashboard",      icon: LayoutDashboard, path: "/dashboard" },
+  { label: "Reports",        icon: BarChart2,        path: "/reports"   },
+  { label: "Inventory",      icon: Package,          path: "/inventory" },
+  { label: "Production",     icon: ChefHat,          path: "/production"},
+  { label: "Library",        icon: BookOpen                             },
+  { label: "Online Channels",icon: Tv2                                  },
+  { label: "Customers",      icon: Users                                },
 ];
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const [ingredientOpen, setIngredientOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -55,51 +45,6 @@ export default function Sidebar() {
       <nav className="sidebar-nav">
         {navItems.map((item) => {
           const Icon = item.icon;
-
-          if (item.expandable) {
-            return (
-              <div key={item.label}>
-                <button
-                  className={`sidebar-item ${ingredientOpen ? "sidebar-item--active" : ""}`}
-                  onClick={() => {
-                    if (collapsed) setCollapsed(false);
-                    setIngredientOpen((prev) => !prev);
-                  }}
-                  title={collapsed ? item.label : undefined}
-                >
-                  <Icon size={18} className="sidebar-icon" />
-                  {!collapsed && (
-                    <>
-                      <span className="sidebar-label">{item.label}</span>
-                      <ChevronRight
-                        size={14}
-                        className={`sidebar-chevron ${ingredientOpen ? "sidebar-chevron--open" : ""}`}
-                      />
-                    </>
-                  )}
-                </button>
-
-                {ingredientOpen && !collapsed && (
-                  <div className="sidebar-children">
-                    {item.children.map((child) => {
-                      const ChildIcon = child.icon;
-                      return (
-                        <button
-                          key={child.label}
-                          className={`sidebar-child ${location.pathname === child.path ? "sidebar-child--active" : ""}`}
-                          onClick={() => navigate(child.path)}
-                        >
-                          <ChildIcon size={15} className="sidebar-icon" />
-                          <span>{child.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          }
-
           return (
             <button
               key={item.label}

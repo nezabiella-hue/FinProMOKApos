@@ -35,6 +35,10 @@ export default function App() {
     setToast({ message: "Boss has been notified via WhatsApp.", type: "success" });
   };
 
+  const handleLowServingWarn = (dishNames) => {
+    setToast({ message: `Boss has been notified that ${dishNames.join(", ")} ${dishNames.length > 1 ? "are" : "is"} running low on servings.` });
+  };
+
   return (
     <div className="app-layout">
       <Sidebar />
@@ -62,6 +66,7 @@ export default function App() {
                 stock={stock}
                 liveStep={liveStep}
                 onLiveUpdate={handleLiveUpdate}
+                onLowServingWarn={handleLowServingWarn}
               />
             }
           />
