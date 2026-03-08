@@ -13,10 +13,11 @@ import {
   getErrorSeverity,
   calculateLiveErrorRate,
 } from "../data/mockUsageErrorRate";
+import { liveSteps } from "../data/mockLiveUpdate";
 import StockOpnameModal from "../Components/StockOpnameModal";
 import "../App.css";
 
-export default function Inventory({ stock, setStock }) {
+export default function Inventory({ stock, setStock, liveStep, onLiveUpdate }) {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -139,12 +140,27 @@ export default function Inventory({ stock, setStock }) {
               expiry risks.
             </p>
           </div>
-          <button
-            className="inv-btn inv-btn--primary"
-            onClick={() => setShowModal(true)}
-          >
-            Upload Stock Opname
-          </button>
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            {liveStep < liveSteps.length ? (
+              <button
+                className="inv-btn inv-btn--outline"
+                onClick={onLiveUpdate}
+                title={`Apply: ${liveSteps[liveStep].label}`}
+              >
+                ▶ Live Update ({liveSteps[liveStep].time} – {liveSteps[liveStep].label})
+              </button>
+            ) : (
+              <button className="inv-btn inv-btn--outline" disabled>
+                ✓ Day Simulation Complete
+              </button>
+            )}
+            <button
+              className="inv-btn inv-btn--primary"
+              onClick={() => setShowModal(true)}
+            >
+              Upload Stock Opname
+            </button>
+          </div>
         </div>
 
         <div className="inv-toolbar">
