@@ -5,6 +5,7 @@ import Dashboard from "./pages/dashboard.jsx";
 import Inventory from "./pages/inventory.jsx";
 import Production from "./pages/production.jsx";
 import Reports from "./pages/reports.jsx";
+import PurchaseOrder from "./pages/purchaseorder.jsx";
 import NotFound from "./pages/notfound.jsx";
 import { inventoryItems } from "./data/mockinventory";
 import { liveSteps, applyLiveStep } from "./data/mockLiveUpdate";
@@ -69,6 +70,10 @@ export default function App() {
                 onLowServingWarn={handleLowServingWarn}
               />
             }
+          />
+          <Route
+            path="/purchase-order"
+            element={<PurchaseOrder stock={stock} />}
           />
           <Route path="*" element={<NotFound />} />
         </Routes>

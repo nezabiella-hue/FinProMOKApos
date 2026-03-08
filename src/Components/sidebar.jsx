@@ -8,17 +8,20 @@ import {
   Tv2,
   Users,
   ChevronLeft,
+  ChevronRight,
   ChefHat,
+  ShoppingCart,
 } from "lucide-react";
 
 const navItems = [
-  { label: "Dashboard",      icon: LayoutDashboard, path: "/dashboard" },
-  { label: "Reports",        icon: BarChart2,        path: "/reports"   },
-  { label: "Inventory",      icon: Package,          path: "/inventory" },
-  { label: "Production",     icon: ChefHat,          path: "/production"},
-  { label: "Library",        icon: BookOpen                             },
-  { label: "Online Channels",icon: Tv2                                  },
-  { label: "Customers",      icon: Users                                },
+  { label: "Dashboard",      icon: LayoutDashboard, path: "/dashboard"      },
+  { label: "Reports",        icon: BarChart2,        path: "/reports"        },
+  { label: "Inventory",      icon: Package,          path: "/inventory"      },
+  { label: "Production",     icon: ChefHat,          path: "/production"     },
+  { label: "Purchase Order", icon: ShoppingCart,     path: "/purchase-order" },
+  { label: "Library",        icon: BookOpen                                   },
+  { label: "Online Channels",icon: Tv2                                        },
+  { label: "Customers",      icon: Users                                      },
 ];
 
 export default function Sidebar() {
