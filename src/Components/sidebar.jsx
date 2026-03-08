@@ -15,7 +15,7 @@ import {
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-  { label: "Reports", icon: BarChart2 },
+  { label: "Reports", icon: BarChart2, path: "/reports" },
   { label: "Library", icon: BookOpen },
   {
     label: "Ingredient",
