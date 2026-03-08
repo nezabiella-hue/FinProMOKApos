@@ -8,12 +8,28 @@ const getSuggestedAction = (diff) => {
   return "Update stock";
 };
 
+// Convert packaging inputs to base units
+const toBaseUnits = (item, { full, opened, openedPct }) => {
+  const size = item.packagingUnit?.size ?? 1;
+  const fullAmt = (parseFloat(full) || 0) * size;
+  const openedAmt = (parseFloat(opened) || 0) * size * ((parseFloat(openedPct) ?? 100) / 100);
+  return Math.round((fullAmt + openedAmt) * 100) / 100;
+};
+
+// Within ±0.5 packages of system stock → no meaningful discrepancy
+const isWithinTolerance = (item, computedBase) => {
+  const size = item.packagingUnit?.size ?? 1;
+  return Math.abs(computedBase - item.currentStock) <= size * 0.5;
+};
+
+const hasInput = (vals) =>
+  vals && (vals.full !== "" || vals.opened !== "");
+
 export default function StockOpnameModal({ inventory, onClose, onApply, onWhatsappNotify }) {
   const [activeMethod, setActiveMethod] = useState(null);
-  // manual input values: { [ingredientName]: string }
+  // manual input values: { [ingredientName]: { full: "", opened: "", openedPct: "100" } }
   const [manualValues, setManualValues] = useState({});
   const [showWhatsappConfirm, setShowWhatsappConfirm] = useState(false);
-  // holds the built update array while waiting for whatsapp confirmation
   const [pendingUpdates, setPendingUpdates] = useState(null);
 
   // ── Preview for CSV / POS methods (uses mock data) ──────
@@ -33,33 +49,46 @@ export default function StockOpnameModal({ inventory, onClose, onApply, onWhatsa
 
   // ── Manual method: rows derived from live inventory ─────
   const manualRows = inventory.map((item) => {
-    const raw = manualValues[item.name];
-    const hasValue = raw !== undefined && raw !== "";
-    const uploadedStock = hasValue ? parseFloat(raw) : null;
-    const diff = hasValue ? uploadedStock - item.currentStock : null;
-    const action = hasValue ? getSuggestedAction(diff) : "—";
-    return { name: item.name, unit: item.unit, systemStock: item.currentStock, uploadedStock, diff, action };
+    const vals = manualValues[item.name];
+    const entered = hasInput(vals);
+    if (!entered) {
+      return {
+        item,
+        entered: false,
+        computedBase: null,
+        diff: null,
+        withinTolerance: false,
+        action: "—",
+      };
+    }
+    const computedBase = toBaseUnits(item, vals);
+    const diff = Math.round((computedBase - item.currentStock) * 100) / 100;
+    const tol = isWithinTolerance(item, computedBase);
+    const action = tol ? "Within tolerance (no update)" : getSuggestedAction(diff);
+    return { item, entered: true, computedBase, diff, withinTolerance: tol, action };
   });
 
-  const handleManualChange = (name, value) => {
-    // only allow non-negative numbers
-    if (value !== "" && (isNaN(value) || parseFloat(value) < 0)) return;
-    setManualValues((prev) => ({ ...prev, [name]: value }));
+  const handleManualChange = (name, field, value) => {
+    if (field !== "openedPct" && value !== "" && (isNaN(value) || parseFloat(value) < 0)) return;
+    if (field === "openedPct" && value !== "" && (isNaN(value) || parseFloat(value) < 0 || parseFloat(value) > 100)) return;
+    setManualValues((prev) => ({
+      ...prev,
+      [name]: { full: "", opened: "", openedPct: "100", ...prev[name], [field]: value },
+    }));
   };
 
   // ── Apply ────────────────────────────────────────────────
-  // Step 1: build updates and show WhatsApp confirmation
   const handleApply = () => {
     let updates;
     if (activeMethod === "manual") {
       updates = manualRows
-        .filter((r) => r.uploadedStock !== null && !isNaN(r.uploadedStock))
+        .filter((r) => r.entered && !r.withinTolerance)
         .map((r) => {
-          const mock = stockOpnameUpdate.find((u) => u.name === r.name);
+          const mock = stockOpnameUpdate.find((u) => u.name === r.item.name);
           return {
-            name: r.name,
-            uploadedStock: r.uploadedStock,
-            unit: r.unit,
+            name: r.item.name,
+            uploadedStock: r.computedBase,
+            unit: r.item.unit,
             lowThreshold: mock?.lowThreshold ?? 200,
             expiryDate: mock?.expiryDate,
             notes: "Manual entry via opname form",
@@ -72,14 +101,12 @@ export default function StockOpnameModal({ inventory, onClose, onApply, onWhatsa
     setShowWhatsappConfirm(true);
   };
 
-  // Step 2a: confirmed — notify WhatsApp then apply
   const handleConfirmNotify = () => {
     onApply(pendingUpdates);
     if (onWhatsappNotify) onWhatsappNotify();
     onClose();
   };
 
-  // Step 2b: skipped — just apply
   const handleSkipNotify = () => {
     onApply(pendingUpdates);
     onClose();
@@ -87,8 +114,19 @@ export default function StockOpnameModal({ inventory, onClose, onApply, onWhatsa
 
   const isApplyEnabled =
     activeMethod === "manual"
-      ? manualRows.some((r) => r.uploadedStock !== null)
+      ? manualRows.some((r) => r.entered && !r.withinTolerance)
       : activeMethod !== null;
+
+  const inputStyle = {
+    width: "68px",
+    padding: "0.25rem 0.4rem",
+    border: "1px solid #d1fae5",
+    borderRadius: "6px",
+    fontSize: "0.82rem",
+    background: "#f0fdf4",
+    color: "#1a3c2e",
+    outline: "none",
+  };
 
   return (
     <div className="inv-modal-overlay">
@@ -181,13 +219,13 @@ export default function StockOpnameModal({ inventory, onClose, onApply, onWhatsa
             </>
           )}
 
-          {/* Manual entry table */}
+          {/* Manual entry table — packaging-based input */}
           {activeMethod === "manual" && (
             <>
               <div className="inv-preview-header">
                 <span className="inv-preview-label">Manual Entry</span>
                 <span style={{ fontSize: "0.78rem", color: "#6b7280" }}>
-                  Leave blank to skip an ingredient
+                  Count by packaging unit · leave blank to skip
                 </span>
               </div>
               <table className="inv-table">
@@ -195,61 +233,112 @@ export default function StockOpnameModal({ inventory, onClose, onApply, onWhatsa
                   <tr>
                     <th>Ingredient</th>
                     <th>System Stock</th>
-                    <th>Actual Count</th>
-                    <th>Difference</th>
-                    <th>Suggested Action</th>
+                    <th>Full (sealed)</th>
+                    <th>Opened pkg</th>
+                    <th>% left in opened</th>
+                    <th>Computed</th>
+                    <th>Diff</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {manualRows.map((row) => (
-                    <tr key={row.name}>
-                      <td className="inv-td-bold">{row.name}</td>
-                      <td className="inv-td-muted">{row.systemStock} {row.unit}</td>
-                      <td>
-                        <input
-                          type="number"
-                          min="0"
-                          placeholder="—"
-                          value={manualValues[row.name] ?? ""}
-                          onChange={(e) => handleManualChange(row.name, e.target.value)}
-                          style={{
-                            width: "90px",
-                            padding: "0.25rem 0.4rem",
-                            border: "1px solid #d1fae5",
-                            borderRadius: "6px",
-                            fontSize: "0.85rem",
-                            background: "#f0fdf4",
-                            color: "#1a3c2e",
-                            outline: "none",
-                          }}
-                        />
-                        <span style={{ marginLeft: "0.3rem", color: "#6b7280", fontSize: "0.8rem" }}>
-                          {row.unit}
-                        </span>
-                      </td>
-                      <td>
-                        {row.diff !== null ? (
-                          <span className={`inv-diff ${row.diff < 0 ? "inv-diff--neg" : row.diff > 0 ? "inv-diff--pos" : "inv-diff--zero"}`}>
-                            {row.diff > 0 ? "+" : ""}{row.diff} {row.unit}
-                          </span>
-                        ) : (
-                          <span className="inv-td-muted">—</span>
-                        )}
-                      </td>
-                      <td>
-                        {row.diff !== null ? (
-                          <select className="inv-action-select">
-                            <option>{row.action}</option>
-                            <option>Mark discrepancy</option>
-                            <option>Update stock</option>
-                            <option>Skip</option>
-                          </select>
-                        ) : (
-                          <span className="inv-td-muted">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                  {manualRows.map(({ item, entered, computedBase, diff, withinTolerance, action }) => {
+                    const vals = manualValues[item.name] || {};
+                    const pkgLabel = item.packagingUnit?.label ?? item.unit;
+                    const showOpenedPct = (parseFloat(vals.opened) || 0) > 0;
+                    return (
+                      <tr key={item.name}>
+                        <td className="inv-td-bold">
+                          {item.name}
+                          <div style={{ fontSize: "0.7rem", color: "#8aab97" }}>per {pkgLabel}: {item.packagingUnit?.size ?? 1} {item.unit}</div>
+                        </td>
+                        <td className="inv-td-muted">
+                          {item.currentStock} {item.unit}
+                          {item.packagingUnit && (
+                            <div style={{ fontSize: "0.7rem", color: "#9ca3af" }}>
+                              ~{Math.floor(item.currentStock / item.packagingUnit.size)} {pkgLabel}
+                            </div>
+                          )}
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="0"
+                            value={vals.full ?? ""}
+                            onChange={(e) => handleManualChange(item.name, "full", e.target.value)}
+                            style={inputStyle}
+                          />
+                          <span style={{ marginLeft: "0.25rem", fontSize: "0.75rem", color: "#6b7280" }}>{pkgLabel}</span>
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            min="0"
+                            max="9"
+                            placeholder="0"
+                            value={vals.opened ?? ""}
+                            onChange={(e) => handleManualChange(item.name, "opened", e.target.value)}
+                            style={{ ...inputStyle, width: "52px" }}
+                          />
+                          <span style={{ marginLeft: "0.25rem", fontSize: "0.75rem", color: "#6b7280" }}>{pkgLabel}</span>
+                        </td>
+                        <td>
+                          {showOpenedPct ? (
+                            <>
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={vals.openedPct ?? "100"}
+                                onChange={(e) => handleManualChange(item.name, "openedPct", e.target.value)}
+                                style={{ ...inputStyle, width: "52px" }}
+                              />
+                              <span style={{ marginLeft: "0.25rem", fontSize: "0.75rem", color: "#6b7280" }}>%</span>
+                            </>
+                          ) : (
+                            <span className="inv-td-muted">—</span>
+                          )}
+                        </td>
+                        <td>
+                          {entered ? (
+                            <span style={{ fontWeight: 600, fontSize: "0.85rem" }}>
+                              {computedBase} {item.unit}
+                            </span>
+                          ) : (
+                            <span className="inv-td-muted">—</span>
+                          )}
+                        </td>
+                        <td>
+                          {entered ? (
+                            <span className={`inv-diff ${withinTolerance ? "inv-diff--zero" : diff < 0 ? "inv-diff--neg" : diff > 0 ? "inv-diff--pos" : "inv-diff--zero"}`}>
+                              {!withinTolerance && diff > 0 ? "+" : ""}{diff} {item.unit}
+                            </span>
+                          ) : (
+                            <span className="inv-td-muted">—</span>
+                          )}
+                        </td>
+                        <td style={{ minWidth: "130px" }}>
+                          {entered ? (
+                            withinTolerance ? (
+                              <span style={{ fontSize: "0.78rem", color: "#6b7280", fontStyle: "italic" }}>
+                                Within tolerance
+                              </span>
+                            ) : (
+                              <select className="inv-action-select">
+                                <option>{action}</option>
+                                <option>Mark discrepancy</option>
+                                <option>Update stock</option>
+                                <option>Skip</option>
+                              </select>
+                            )
+                          ) : (
+                            <span className="inv-td-muted">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </>

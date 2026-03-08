@@ -3,6 +3,7 @@ import { X, Package } from "lucide-react";
 import { getExpiryStatus } from "../../data/mockinventory";
 import { getErrorRate, getErrorSeverity } from "../../data/mockUsageErrorRate";
 import { initialDishes } from "../../data/mockproduction";
+import { predictExpiryDate, getExpiryRecord } from "../../data/mockExpiryHistory";
 
 function getStatusClass(status) {
   if (status === "Low") return "inv-badge inv-badge--low";
@@ -64,6 +65,14 @@ export default function StockDetailDrawer({ item, liveErrorRates, onClose, onOpe
                 <span className="inv-overview-label">Current Stock</span>
                 <span className="inv-overview-value">
                   {item.currentStock} {item.unit}
+                  {item.packagingUnit && (
+                    <span className="inv-drawer-pkg">
+                      {" "}≈ {Math.floor(item.currentStock / item.packagingUnit.size)} {item.packagingUnit.label}
+                      {item.currentStock % item.packagingUnit.size > 0
+                        ? ` + ${Math.round(item.currentStock % item.packagingUnit.size * 100) / 100} ${item.unit} partial`
+                        : ""}
+                    </span>
+                  )}
                 </span>
               </div>
               <div className="inv-overview-item">
@@ -132,17 +141,49 @@ export default function StockDetailDrawer({ item, liveErrorRates, onClose, onOpe
             <h3 className="inv-drawer-section-title">Batch / Freshness</h3>
             {item.batches.length === 0 ? (
               <p className="inv-td-muted">No batch data available.</p>
-            ) : (
-              <div className="inv-batches">
-                {item.batches.map((b) => (
-                  <div key={b.label} className="inv-batch-card">
-                    <span className="inv-batch-label">{b.label}</span>
-                    <span className="inv-batch-amount">{b.amount} {b.unit}</span>
-                    <span className="inv-batch-age">{b.age}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            ) : (() => {
+              const expiryRecord = getExpiryRecord(item.name);
+              const isAdjusted = expiryRecord?.patternStatus === "confirmed";
+              return (
+                <div className="inv-batches">
+                  {item.batches.map((b) => {
+                    const predicted = b.purchaseDate && item.shelfLifeDays
+                      ? predictExpiryDate(item.name, b.purchaseDate, item.shelfLifeDays)
+                      : null;
+                    const expiryWarning = predicted ? getExpiryStatus(predicted) : null;
+                    const isExpiring = expiryWarning && expiryWarning !== "Fresh";
+                    return (
+                      <div key={b.label} className="inv-batch-card">
+                        <span className="inv-batch-label">{b.label}</span>
+                        <span className="inv-batch-amount">{b.amount} {b.unit}</span>
+                        <span className="inv-batch-age">{b.age}</span>
+                        {b.purchaseDate && (
+                          <div style={{ marginTop: "0.35rem", fontSize: "0.75rem", color: "#6b7280" }}>
+                            <div>Purchased: <strong>{b.purchaseDate}</strong></div>
+                            {predicted && (
+                              <div style={{ marginTop: "0.15rem" }}>
+                                Expected expiry:{" "}
+                                <strong style={{ color: isExpiring ? "#b45309" : "#1a3c2e" }}>
+                                  {predicted}
+                                </strong>
+                                {isAdjusted && (
+                                  <span style={{ marginLeft: "0.35rem", fontSize: "0.7rem", color: "#d97706", fontStyle: "italic" }}>
+                                    (adjusted ↓{expiryRecord.baselineShelfLife - expiryRecord.adjustedShelfLife}d)
+                                  </span>
+                                )}
+                                {isExpiring && (
+                                  <span style={{ marginLeft: "0.35rem", color: "#b45309" }}>· {expiryWarning}</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </section>
 
           <section className="inv-drawer-section">

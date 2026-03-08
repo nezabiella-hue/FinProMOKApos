@@ -20,6 +20,13 @@ function getExpiryClass(expiryDate) {
   return getExpiryStatus(expiryDate) !== "Fresh" ? "inv-expiry--warn" : "";
 }
 
+function getPackageCount(item) {
+  if (!item.packagingUnit) return null;
+  const full = Math.floor(item.currentStock / item.packagingUnit.size);
+  const remainder = Math.round((item.currentStock % item.packagingUnit.size) * 100) / 100;
+  return { full, remainder, label: item.packagingUnit.label };
+}
+
 function renderErrorRate(ingredientName, liveErrorRates) {
   const live = liveErrorRates[ingredientName];
   const baseline = getErrorRate(ingredientName);
@@ -165,12 +172,21 @@ export default function StockTable({
               <td colSpan={7} className="inv-empty">No ingredients found.</td>
             </tr>
           )}
-          {filtered.map((item) => (
+          {filtered.map((item) => {
+            const pkg = getPackageCount(item);
+            return (
             <tr key={item.id}>
               <td className="inv-td-bold">{item.name}</td>
               <td>
-                <span className="inv-stock-num">{item.currentStock}</span>
-                <span className="inv-stock-unit"> {item.unit}</span>
+                <div>
+                  <span className="inv-stock-num">{item.currentStock}</span>
+                  <span className="inv-stock-unit"> {item.unit}</span>
+                </div>
+                {pkg && (
+                  <div className="inv-pkg-count">
+                    ~{pkg.full} {pkg.label}{pkg.remainder > 0 ? ` + ${pkg.remainder} ${item.unit}` : ""}
+                  </div>
+                )}
               </td>
               <td>
                 <span className={getStatusClass(item.status)}>{item.status}</span>
@@ -186,7 +202,8 @@ export default function StockTable({
                 </button>
               </td>
             </tr>
-          ))}
+          );
+          })}
         </tbody>
       </table>
     </div>

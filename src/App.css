@@ -1161,6 +1161,12 @@
   color: #8aab97;
 }
 
+.inv-pkg-count {
+  font-size: 0.72rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
 .inv-empty {
   text-align: center;
   padding: 2rem;
@@ -1361,6 +1367,14 @@
   font-size: 0.9rem;
   font-weight: 600;
   color: #1a2e22;
+}
+
+.inv-drawer-pkg {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #6b7280;
+  margin-top: 2px;
 }
 
 .inv-batches {

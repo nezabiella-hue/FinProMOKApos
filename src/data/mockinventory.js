@@ -17,9 +17,9 @@ export const getExpiryStatus = (expiryDate) => {
   return "Fresh";
 };
 
-const daysFromNow = (n) => {
+const daysAgo = (n) => {
   const d = new Date();
-  d.setDate(d.getDate() + n);
+  d.setDate(d.getDate() - n);
   return d.toISOString().split("T")[0];
 };
 
@@ -34,9 +34,11 @@ export const inventoryItems = [
     expiryDate: null,
     usedBy: ["Espresso", "Caramel Latte", "Cappuccino", "Iced Americano"],
     lastOpname: "3 days ago",
+    packagingUnit: { label: "bag", size: 250, unitLabel: "g" },
+    shelfLifeDays: 30,
     batches: [
-      { label: "Batch A", amount: 1500, unit: "g", age: "Purchased 5 days ago" },
-      { label: "Batch B", amount: 900, unit: "g", age: "Purchased 3 days ago" },
+      { label: "Batch A", amount: 1500, unit: "g", age: "Purchased 5 days ago", purchaseDate: daysAgo(5) },
+      { label: "Batch B", amount: 900, unit: "g", age: "Purchased 3 days ago", purchaseDate: daysAgo(3) },
     ],
   },
   {
@@ -49,9 +51,11 @@ export const inventoryItems = [
     expiryDate: null, // expiry revealed after opname
     usedBy: ["Caramel Latte", "Matcha Latte", "Cappuccino"],
     lastOpname: "3 days ago",
+    packagingUnit: { label: "carton", size: 1000, unitLabel: "ml" },
+    shelfLifeDays: 7,
     batches: [
-      { label: "Batch A", amount: 3500, unit: "ml", age: "Purchased 4 days ago" },
-      { label: "Batch B", amount: 2500, unit: "ml", age: "Purchased 2 days ago" },
+      { label: "Batch A", amount: 3500, unit: "ml", age: "Purchased 4 days ago", purchaseDate: daysAgo(4) },
+      { label: "Batch B", amount: 2500, unit: "ml", age: "Purchased 2 days ago", purchaseDate: daysAgo(2) },
     ],
   },
   {
@@ -64,8 +68,10 @@ export const inventoryItems = [
     expiryDate: null,
     usedBy: ["Matcha Latte"],
     lastOpname: "3 days ago",
+    packagingUnit: { label: "tin", size: 100, unitLabel: "g" },
+    shelfLifeDays: 90,
     batches: [
-      { label: "Batch A", amount: 500, unit: "g", age: "Purchased 3 days ago" },
+      { label: "Batch A", amount: 500, unit: "g", age: "Purchased 3 days ago", purchaseDate: daysAgo(3) },
     ],
   },
   {
@@ -78,8 +84,10 @@ export const inventoryItems = [
     expiryDate: null,
     usedBy: ["Caramel Latte"],
     lastOpname: "3 days ago",
+    packagingUnit: { label: "bottle", size: 500, unitLabel: "ml" },
+    shelfLifeDays: 180,
     batches: [
-      { label: "Batch A", amount: 900, unit: "ml", age: "Purchased 4 days ago" },
+      { label: "Batch A", amount: 900, unit: "ml", age: "Purchased 4 days ago", purchaseDate: daysAgo(4) },
     ],
   },
   {
@@ -87,13 +95,15 @@ export const inventoryItems = [
     name: "Croissant Dough",
     currentStock: 30,
     unit: "pcs",
-    category: "Pastry",
+    category: "Prep Base",
     status: "OK",
     expiryDate: null, // expiry revealed after opname
     usedBy: ["Croissant"],
     lastOpname: "3 days ago",
+    packagingUnit: { label: "pc", size: 1, unitLabel: "pcs" },
+    shelfLifeDays: 2,
     batches: [
-      { label: "Batch A", amount: 30, unit: "pcs", age: "Purchased 3 days ago" },
+      { label: "Batch A", amount: 30, unit: "pcs", age: "Purchased 3 days ago", purchaseDate: daysAgo(3) },
     ],
   },
   {
@@ -106,9 +116,11 @@ export const inventoryItems = [
     expiryDate: null,
     usedBy: ["Muffin"],
     lastOpname: "3 days ago",
+    packagingUnit: { label: "pack", size: 400, unitLabel: "g" },
+    shelfLifeDays: 180,
     batches: [
-      { label: "Batch A", amount: 500, unit: "g", age: "Purchased 4 days ago" },
-      { label: "Batch B", amount: 300, unit: "g", age: "Purchased 1 day ago" },
+      { label: "Batch A", amount: 500, unit: "g", age: "Purchased 4 days ago", purchaseDate: daysAgo(4) },
+      { label: "Batch B", amount: 300, unit: "g", age: "Purchased 1 day ago", purchaseDate: daysAgo(1) },
     ],
   },
   {
@@ -121,8 +133,10 @@ export const inventoryItems = [
     expiryDate: null,
     usedBy: ["Caramel Latte", "Matcha Latte", "Cappuccino", "Muffin"],
     lastOpname: "3 days ago",
+    packagingUnit: { label: "bag", size: 1000, unitLabel: "g" },
+    shelfLifeDays: 365,
     batches: [
-      { label: "Batch A", amount: 5000, unit: "g", age: "Purchased 5 days ago" },
+      { label: "Batch A", amount: 5000, unit: "g", age: "Purchased 5 days ago", purchaseDate: daysAgo(5) },
     ],
   },
   {
@@ -135,8 +149,10 @@ export const inventoryItems = [
     expiryDate: null,
     usedBy: ["Iced Americano"],
     lastOpname: "3 days ago",
+    packagingUnit: { label: "bag", size: 50, unitLabel: "pcs" },
+    shelfLifeDays: 1,
     batches: [
-      { label: "Batch A", amount: 200, unit: "pcs", age: "Made today" },
+      { label: "Batch A", amount: 200, unit: "pcs", age: "Made today", purchaseDate: daysAgo(0) },
     ],
   },
   {
@@ -149,9 +165,11 @@ export const inventoryItems = [
     expiryDate: null, // expiry revealed after opname
     usedBy: ["Cappuccino", "Caramel Latte"],
     lastOpname: "3 days ago",
+    packagingUnit: { label: "can", size: 500, unitLabel: "ml" },
+    shelfLifeDays: 14,
     batches: [
-      { label: "Batch A", amount: 1500, unit: "ml", age: "Purchased 3 days ago" },
-      { label: "Batch B", amount: 800, unit: "ml", age: "Purchased 1 day ago" },
+      { label: "Batch A", amount: 1500, unit: "ml", age: "Purchased 3 days ago", purchaseDate: daysAgo(3) },
+      { label: "Batch B", amount: 800, unit: "ml", age: "Purchased 1 day ago", purchaseDate: daysAgo(1) },
     ],
   },
   {
@@ -164,8 +182,10 @@ export const inventoryItems = [
     expiryDate: null,
     usedBy: ["Caramel Latte"],
     lastOpname: "3 days ago",
+    packagingUnit: { label: "bottle", size: 500, unitLabel: "ml" },
+    shelfLifeDays: 180,
     batches: [
-      { label: "Batch A", amount: 600, unit: "ml", age: "Purchased 4 days ago" },
+      { label: "Batch A", amount: 600, unit: "ml", age: "Purchased 4 days ago", purchaseDate: daysAgo(4) },
     ],
   },
   {
@@ -178,8 +198,10 @@ export const inventoryItems = [
     expiryDate: null,
     usedBy: ["Mocha"],
     lastOpname: "3 days ago",
+    packagingUnit: { label: "tin", size: 200, unitLabel: "g" },
+    shelfLifeDays: 180,
     batches: [
-      { label: "Batch A", amount: 400, unit: "g", age: "Purchased 2 days ago" },
+      { label: "Batch A", amount: 400, unit: "g", age: "Purchased 2 days ago", purchaseDate: daysAgo(2) },
     ],
   },
   {
@@ -192,8 +214,10 @@ export const inventoryItems = [
     expiryDate: null,
     usedBy: ["All drinks"],
     lastOpname: "3 days ago",
+    packagingUnit: { label: "pack", size: 50, unitLabel: "pcs" },
+    shelfLifeDays: 730,
     batches: [
-      { label: "Batch A", amount: 150, unit: "pcs", age: "Purchased today" },
+      { label: "Batch A", amount: 150, unit: "pcs", age: "Purchased today", purchaseDate: daysAgo(0) },
     ],
   },
   {
@@ -206,8 +230,10 @@ export const inventoryItems = [
     expiryDate: null,
     usedBy: ["Croissant Dough", "Springroll Wrapper", "Muffin Batter"],
     lastOpname: "3 days ago",
+    packagingUnit: { label: "bag", size: 1000, unitLabel: "g" },
+    shelfLifeDays: 365,
     batches: [
-      { label: "Batch A", amount: 2000, unit: "g", age: "Purchased 2 days ago" },
+      { label: "Batch A", amount: 2000, unit: "g", age: "Purchased 2 days ago", purchaseDate: daysAgo(2) },
     ],
   },
   {
@@ -220,8 +246,10 @@ export const inventoryItems = [
     expiryDate: null,
     usedBy: ["Springroll Wrapper", "Muffin Batter"],
     lastOpname: "3 days ago",
+    packagingUnit: { label: "dozen", size: 12, unitLabel: "pcs" },
+    shelfLifeDays: 21,
     batches: [
-      { label: "Batch A", amount: 24, unit: "pcs", age: "Purchased 1 day ago" },
+      { label: "Batch A", amount: 24, unit: "pcs", age: "Purchased 1 day ago", purchaseDate: daysAgo(1) },
     ],
   },
   {
@@ -234,8 +262,10 @@ export const inventoryItems = [
     expiryDate: null,
     usedBy: ["Croissant Dough", "Muffin Batter", "Caramel Sauce Base"],
     lastOpname: "3 days ago",
+    packagingUnit: { label: "block", size: 250, unitLabel: "g" },
+    shelfLifeDays: 60,
     batches: [
-      { label: "Batch A", amount: 500, unit: "g", age: "Purchased 3 days ago" },
+      { label: "Batch A", amount: 500, unit: "g", age: "Purchased 3 days ago", purchaseDate: daysAgo(3) },
     ],
   },
   {
@@ -248,12 +278,62 @@ export const inventoryItems = [
     expiryDate: null,
     usedBy: ["Croissant Dough"],
     lastOpname: "3 days ago",
+    packagingUnit: { label: "sachet", size: 10, unitLabel: "g" },
+    shelfLifeDays: 90,
     batches: [
-      { label: "Batch A", amount: 20, unit: "g", age: "Purchased 2 days ago" },
+      { label: "Batch A", amount: 20, unit: "g", age: "Purchased 2 days ago", purchaseDate: daysAgo(2) },
+    ],
+  },
+  {
+    id: 17,
+    name: "Springroll Wrapper",
+    currentStock: 20,
+    unit: "pcs",
+    category: "Prep Base",
+    status: "OK",
+    expiryDate: null,
+    usedBy: [],
+    lastOpname: "3 days ago",
+    packagingUnit: { label: "pack", size: 10, unitLabel: "pcs" },
+    shelfLifeDays: 3,
+    batches: [
+      { label: "Batch A", amount: 20, unit: "pcs", age: "Made today", purchaseDate: daysAgo(0) },
+    ],
+  },
+  {
+    id: 18,
+    name: "Muffin Batter",
+    currentStock: 12,
+    unit: "pcs",
+    category: "Prep Base",
+    status: "OK",
+    expiryDate: null,
+    usedBy: [],
+    lastOpname: "3 days ago",
+    packagingUnit: { label: "pc", size: 1, unitLabel: "pcs" },
+    shelfLifeDays: 2,
+    batches: [
+      { label: "Batch A", amount: 12, unit: "pcs", age: "Made today", purchaseDate: daysAgo(0) },
+    ],
+  },
+  {
+    id: 19,
+    name: "Caramel Sauce Base",
+    currentStock: 500,
+    unit: "ml",
+    category: "Prep Base",
+    status: "OK",
+    expiryDate: null,
+    usedBy: [],
+    lastOpname: "3 days ago",
+    packagingUnit: { label: "jar", size: 250, unitLabel: "ml" },
+    shelfLifeDays: 5,
+    batches: [
+      { label: "Batch A", amount: 500, unit: "ml", age: "Made today", purchaseDate: daysAgo(0) },
     ],
   },
 ];
 
-export const categories = ["All Categories", "Raw Material", "Dairy", "Syrup", "Pastry", "Packaging", "Others"];
+export const categories = ["All Categories", "Raw Material", "Dairy", "Syrup", "Pastry", "Prep Base", "Packaging", "Others"];
 export const statusOptions = ["All Status", "OK", "Low", "Out"];
 export const expiryOptions = ["All Expiry", "Fresh", "Expiring Soon"];
