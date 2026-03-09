@@ -2040,3 +2040,140 @@
   font-size: 0.88rem;
   color: #111827;
 }
+
+/* ── DishList stock bars ──────────────────────────────────── */
+
+/* Highlighted row when it's the top of an ingredient sort */
+.prod-row--sort-top td {
+  background: #f0fdf4;
+}
+.prod-row--sort-top:hover td {
+  background: #e8faf0;
+}
+
+/* Sort chip above the table */
+.prod-sort-chip-row {
+  padding: 0.5rem 1.5rem 0;
+}
+
+.prod-sort-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 20px;
+  padding: 0.2rem 0.55rem 0.2rem 0.75rem;
+  font-size: 0.78rem;
+  color: #1d4ed8;
+}
+
+.prod-sort-chip-clear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #1d4ed8;
+  display: flex;
+  align-items: center;
+  padding: 0.1rem;
+  border-radius: 50%;
+  transition: background 0.15s;
+}
+.prod-sort-chip-clear:hover {
+  background: #bfdbfe;
+}
+
+/* Cell that holds all the bars for a dish row */
+.prod-bars-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 160px;
+  max-width: 220px;
+}
+
+/* One ingredient bar */
+.prod-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.prod-bar-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.3rem;
+}
+
+/* Clickable ingredient name */
+.prod-ing-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+  transition: color 0.15s;
+}
+.prod-ing-btn:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+.prod-ing-btn--active {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* Fraction label e.g. "450/612ml" */
+.prod-bar-fraction {
+  font-size: 0.68rem;
+  color: #9ca3af;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Track (gray background) */
+.prod-bar-track {
+  width: 100%;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+/* Colored fill — color and width set via inline style */
+.prod-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  min-width: 2px;
+}
+
+/* "+ N more" button at bottom of bars cell */
+.prod-bar-more {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.72rem;
+  color: #2563eb;
+  padding: 0;
+  text-align: left;
+  font-weight: 500;
+}
+.prod-bar-more:hover {
+  text-decoration: underline;
+}
+
+/* Stacked expiry warnings */
+.prod-expiry-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
