@@ -77,7 +77,7 @@ export default function PurchaseOrder({ stock }) {
   const avgDailyUsage = useMemo(() => calcAvgDailyUsage(), []);
 
   const enrichedStock = useMemo(() => {
-    return stock.map((item) => {
+    return stock.filter((item) => item.category !== "Prep Base").map((item) => {
       const daily = avgDailyUsage[item.name] || 0;
       const daysOfStock =
         daily > 0 ? Math.round((item.currentStock / daily) * 10) / 10 : null;
