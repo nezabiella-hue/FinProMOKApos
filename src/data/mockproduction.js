@@ -138,4 +138,17 @@ export const semiFinishedGoods = [
       { ingredient: "Butter", qty: 50,  unit: "g", wasteBuffer: 0 },
     ],
   },
+  {
+    id: "sf5",
+    name: "House Blend",
+    category: "Coffee Base",
+    yieldQty: 500,
+    yieldUnit: "g",
+    // Roasted & rested in-house: best used within 7 days of roast for peak flavour
+    shelfLifeDays: 7,
+    recipe: [
+      { ingredient: "Arabica Gayo Beans",   qty: 300, unit: "g", wasteBuffer: 3 },
+      { ingredient: "African Robusta Beans", qty: 200, unit: "g", wasteBuffer: 3 },
+    ],
+  },
 ];

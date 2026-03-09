@@ -97,13 +97,14 @@ export const inventoryItems = [
     unit: "pcs",
     category: "Prep Base",
     status: "OK",
-    expiryDate: null, // expiry revealed after opname
+    expiryDate: null,
     usedBy: ["Croissant"],
-    lastOpname: "3 days ago",
+    lastOpname: "1 day ago",
     packagingUnit: { label: "pc", size: 1, unitLabel: "pcs" },
-    shelfLifeDays: 2,
+    shelfLifeDays: 2, // raw laminated dough: best within 2 days of prep
     batches: [
-      { label: "Batch A", amount: 30, unit: "pcs", age: "Purchased 3 days ago", purchaseDate: daysAgo(3) },
+      { label: "Batch A", amount: 18, unit: "pcs", age: "Made yesterday", purchaseDate: daysAgo(1), madeDate: daysAgo(1) },
+      { label: "Batch B", amount: 12, unit: "pcs", age: "Made today", purchaseDate: daysAgo(0), madeDate: daysAgo(0) },
     ],
   },
   {
@@ -293,11 +294,11 @@ export const inventoryItems = [
     status: "OK",
     expiryDate: null,
     usedBy: [],
-    lastOpname: "3 days ago",
+    lastOpname: "today",
     packagingUnit: { label: "pack", size: 10, unitLabel: "pcs" },
-    shelfLifeDays: 3,
+    shelfLifeDays: 2, // fresh wrapper: best used within 2 days of prep
     batches: [
-      { label: "Batch A", amount: 20, unit: "pcs", age: "Made today", purchaseDate: daysAgo(0) },
+      { label: "Batch A", amount: 20, unit: "pcs", age: "Made today", purchaseDate: daysAgo(0), madeDate: daysAgo(0) },
     ],
   },
   {
@@ -309,11 +310,11 @@ export const inventoryItems = [
     status: "OK",
     expiryDate: null,
     usedBy: [],
-    lastOpname: "3 days ago",
+    lastOpname: "today",
     packagingUnit: { label: "pc", size: 1, unitLabel: "pcs" },
-    shelfLifeDays: 2,
+    shelfLifeDays: 1, // wet batter with eggs: use same day or next morning max
     batches: [
-      { label: "Batch A", amount: 12, unit: "pcs", age: "Made today", purchaseDate: daysAgo(0) },
+      { label: "Batch A", amount: 12, unit: "pcs", age: "Made today", purchaseDate: daysAgo(0), madeDate: daysAgo(0) },
     ],
   },
   {
@@ -330,6 +331,61 @@ export const inventoryItems = [
     shelfLifeDays: 5,
     batches: [
       { label: "Batch A", amount: 500, unit: "ml", age: "Made today", purchaseDate: daysAgo(0) },
+    ],
+  },
+  // ── New bean ingredients for House Blend ─────────────────
+  {
+    id: 20,
+    name: "Arabica Gayo Beans",
+    currentStock: 1200,
+    unit: "g",
+    category: "Raw Material",
+    status: "OK",
+    expiryDate: null,
+    usedBy: ["House Blend"],
+    lastOpname: "2 days ago",
+    // Green beans: roasted in-house. Peak flavour window is 5–14 days post-roast.
+    // We track from roast date; after 14 days off-gassing fades and flavour drops.
+    shelfLifeDays: 14,
+    packagingUnit: { label: "bag", size: 250, unitLabel: "g" },
+    batches: [
+      { label: "Roast A", amount: 750, unit: "g", age: "Roasted 3 days ago", purchaseDate: daysAgo(3), madeDate: daysAgo(3) },
+      { label: "Roast B", amount: 450, unit: "g", age: "Roasted today",      purchaseDate: daysAgo(0), madeDate: daysAgo(0) },
+    ],
+  },
+  {
+    id: 21,
+    name: "African Robusta Beans",
+    currentStock: 800,
+    unit: "g",
+    category: "Raw Material",
+    status: "OK",
+    expiryDate: null,
+    usedBy: ["House Blend"],
+    lastOpname: "2 days ago",
+    // Robusta is more forgiving than Arabica, but still best within 21 days post-roast
+    shelfLifeDays: 21,
+    packagingUnit: { label: "bag", size: 250, unitLabel: "g" },
+    batches: [
+      { label: "Roast A", amount: 500, unit: "g", age: "Roasted 5 days ago", purchaseDate: daysAgo(5), madeDate: daysAgo(5) },
+      { label: "Roast B", amount: 300, unit: "g", age: "Roasted 1 day ago",  purchaseDate: daysAgo(1), madeDate: daysAgo(1) },
+    ],
+  },
+  {
+    id: 22,
+    name: "House Blend",
+    currentStock: 500,
+    unit: "g",
+    category: "Prep Base",
+    status: "OK",
+    expiryDate: null,
+    usedBy: ["Any espresso-based drink (when House Blend is selected)"],
+    lastOpname: "today",
+    // Blended & ground: degrades fast once ground. If stored whole-bean after blending: 7 days.
+    shelfLifeDays: 7,
+    packagingUnit: { label: "batch", size: 500, unitLabel: "g" },
+    batches: [
+      { label: "Blend A", amount: 500, unit: "g", age: "Blended today", purchaseDate: daysAgo(0), madeDate: daysAgo(0) },
     ],
   },
 ];
