@@ -4,6 +4,55 @@
 // No React, no API calls — just functions.
 // ─────────────────────────────────────────────────────────
 
+import { predictExpiryDate } from "../data/mockExpiryHistory";
+
+// ── Batch expiry helpers ──────────────────────────────────
+// Returns array of batches that are expiring within 3 days (or already expired).
+// Each entry: { label, amount, unit, daysLeft, status, percentage }
+// percentage = that batch's share of total currentStock.
+// Items with no batches or no shelfLifeDays return [].
+export function getBatchExpiryInfo(item) {
+  if (!item.batches?.length || !item.shelfLifeDays) return [];
+  const totalStock = item.currentStock > 0 ? item.currentStock
+    : item.batches.reduce((s, b) => s + b.amount, 0);
+  if (totalStock === 0) return [];
+
+  // FIFO depletion: consumed stock is drawn from the oldest batches first.
+  // This ensures effective amounts always sum to totalStock, so % never exceeds 100%.
+  const totalBatchAmount = item.batches.reduce((s, b) => s + b.amount, 0);
+  let remaining = Math.max(0, totalBatchAmount - totalStock); // already consumed
+  const effective = item.batches.map((b) => {
+    const eff = Math.max(0, b.amount - remaining);
+    remaining = Math.max(0, remaining - b.amount);
+    return eff;
+  });
+
+  const expiring = [];
+  item.batches.forEach((batch, i) => {
+    const dateRef = batch.madeDate || batch.purchaseDate;
+    if (!dateRef || effective[i] === 0) return;
+    const predicted = predictExpiryDate(item.name, dateRef, item.shelfLifeDays);
+    const daysLeft = Math.ceil((new Date(predicted) - new Date()) / 86400000);
+    if (daysLeft <= 3) {
+      const percentage = Math.round((effective[i] / totalStock) * 100);
+      expiring.push({
+        label: batch.label,
+        amount: effective[i],
+        unit: batch.unit,
+        daysLeft,
+        status: daysLeft <= 0 ? "Expired" : `Expires in ${daysLeft} day${daysLeft > 1 ? "s" : ""}`,
+        percentage,
+      });
+    }
+  });
+  return expiring;
+}
+
+// Returns true if any batch on the item is expiring soon (for filter/class logic)
+export function hasExpiringBatch(item) {
+  return getBatchExpiryInfo(item).length > 0;
+}
+
 export function calcServings(dish, stock) {
   if (!dish.recipe || dish.recipe.length === 0)
     return { servings: 0, limiter: "No recipe" };

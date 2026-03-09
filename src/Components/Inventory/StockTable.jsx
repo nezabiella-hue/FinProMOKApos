@@ -5,8 +5,8 @@ import {
   categories,
   statusOptions,
   expiryOptions,
-  getExpiryStatus,
 } from "../../data/mockinventory";
+import { getBatchExpiryInfo, hasExpiringBatch } from "../../utils/productionHelpers";
 import { getErrorRate, getErrorSeverity } from "../../data/mockUsageErrorRate";
 import { liveSteps } from "../../data/mockLiveUpdate";
 
@@ -14,10 +14,6 @@ function getStatusClass(status) {
   if (status === "Low") return "inv-badge inv-badge--low";
   if (status === "Out") return "inv-badge inv-badge--out";
   return "inv-badge inv-badge--ok";
-}
-
-function getExpiryClass(expiryDate) {
-  return getExpiryStatus(expiryDate) !== "Fresh" ? "inv-expiry--warn" : "";
 }
 
 function getPackageCount(item) {
@@ -78,8 +74,8 @@ export default function StockTable({
       statusFilter === "All Status" || item.status === statusFilter;
     const matchExpiry =
       expiryFilter === "All Expiry" ||
-      (expiryFilter === "Fresh" && getExpiryStatus(item.expiryDate) === "Fresh") ||
-      (expiryFilter === "Expiring Soon" && getExpiryStatus(item.expiryDate) !== "Fresh");
+      (expiryFilter === "Fresh" && !hasExpiringBatch(item)) ||
+      (expiryFilter === "Expiring Soon" && hasExpiringBatch(item));
     return matchSearch && matchCategory && matchStatus && matchExpiry;
   });
 
@@ -191,8 +187,23 @@ export default function StockTable({
               <td>
                 <span className={getStatusClass(item.status)}>{item.status}</span>
               </td>
-              <td className={getExpiryClass(item.expiryDate)}>
-                {getExpiryStatus(item.expiryDate)}
+              <td>
+                {(() => {
+                  const exp = getBatchExpiryInfo(item);
+                  if (exp.length === 0) return <span className="inv-td-muted">Fresh</span>;
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                      {exp.map((b) => (
+                        <span key={b.label} className="inv-expiry--warn" style={{ fontSize: "0.82rem", display: "block" }}>
+                          {b.percentage}% {b.status}
+                          <span style={{ fontWeight: 400, color: "#92400e", marginLeft: "0.25rem" }}>
+                            ({b.label}: {b.amount} {b.unit})
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                  );
+                })()}
               </td>
               <td>{renderErrorRate(item.name, liveErrorRates)}</td>
               <td className="inv-td-muted">{item.lastOpname}</td>

@@ -1,6 +1,6 @@
 // Components/Inventory/StockDetailDrawer.jsx
 import { X, Package } from "lucide-react";
-import { getExpiryStatus } from "../../data/mockinventory";
+import { getBatchExpiryInfo } from "../../utils/productionHelpers";
 import { getErrorRate, getErrorSeverity } from "../../data/mockUsageErrorRate";
 import { initialDishes } from "../../data/mockproduction";
 import { predictExpiryDate, getExpiryRecord } from "../../data/mockExpiryHistory";
@@ -81,9 +81,22 @@ export default function StockDetailDrawer({ item, liveErrorRates, onClose, onOpe
               </div>
               <div className="inv-overview-item">
                 <span className="inv-overview-label">Expiry</span>
-                <span className={getExpiryStatus(item.expiryDate) !== "Fresh" ? "inv-expiry--warn" : "inv-overview-value"}>
-                  {getExpiryStatus(item.expiryDate)}
-                </span>
+                {(() => {
+                  const exp = getBatchExpiryInfo(item);
+                  if (exp.length === 0) return <span className="inv-overview-value">Fresh</span>;
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                      {exp.map((b) => (
+                        <span key={b.label} className="inv-expiry--warn" style={{ fontSize: "0.85rem", display: "block" }}>
+                          {b.percentage}% {b.status}
+                          <span style={{ fontWeight: 400, marginLeft: "0.25rem" }}>
+                            ({b.label})
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
               <div className="inv-overview-item">
                 <span className="inv-overview-label">Used By</span>
@@ -150,7 +163,14 @@ export default function StockDetailDrawer({ item, liveErrorRates, onClose, onOpe
                     const predicted = b.purchaseDate && item.shelfLifeDays
                       ? predictExpiryDate(item.name, b.purchaseDate, item.shelfLifeDays)
                       : null;
-                    const expiryWarning = predicted ? getExpiryStatus(predicted) : null;
+                    const expiryWarning = predicted
+                      ? (() => {
+                          const days = Math.ceil((new Date(predicted) - new Date()) / 86400000);
+                          if (days <= 0) return "Expired";
+                          if (days <= 3) return `Expires in ${days} day${days > 1 ? "s" : ""}`;
+                          return "Fresh";
+                        })()
+                      : null;
                     const isExpiring = expiryWarning && expiryWarning !== "Fresh";
                     return (
                       <div key={b.label} className="inv-batch-card">

@@ -97,10 +97,10 @@ export const semiFinishedGoods = [
     yieldQty: 12,
     yieldUnit: "pcs",
     recipe: [
-      { ingredient: "All-Purpose Flour", qty: 300, unit: "g",   wasteBuffer: 2 },
-      { ingredient: "Butter",            qty: 150, unit: "g",   wasteBuffer: 0 },
-      { ingredient: "Yeast",             qty: 5,   unit: "g",   wasteBuffer: 0 },
-      { ingredient: "Sugar",             qty: 30,  unit: "g",   wasteBuffer: 0 },
+      { ingredient: "All-Purpose Flour", qty: 300, unit: "g", wasteBuffer: 2 },
+      { ingredient: "Butter", qty: 150, unit: "g", wasteBuffer: 0 },
+      { ingredient: "Yeast", qty: 5, unit: "g", wasteBuffer: 0 },
+      { ingredient: "Sugar", qty: 30, unit: "g", wasteBuffer: 0 },
     ],
   },
   {
@@ -110,8 +110,8 @@ export const semiFinishedGoods = [
     yieldQty: 20,
     yieldUnit: "pcs",
     recipe: [
-      { ingredient: "All-Purpose Flour", qty: 200, unit: "g",   wasteBuffer: 3 },
-      { ingredient: "Eggs",              qty: 2,   unit: "pcs", wasteBuffer: 0 },
+      { ingredient: "All-Purpose Flour", qty: 200, unit: "g", wasteBuffer: 3 },
+      { ingredient: "Eggs", qty: 2, unit: "pcs", wasteBuffer: 0 },
     ],
   },
   {
@@ -121,10 +121,10 @@ export const semiFinishedGoods = [
     yieldQty: 12,
     yieldUnit: "pcs",
     recipe: [
-      { ingredient: "All-Purpose Flour", qty: 250, unit: "g",   wasteBuffer: 2 },
-      { ingredient: "Eggs",              qty: 3,   unit: "pcs", wasteBuffer: 0 },
-      { ingredient: "Butter",            qty: 100, unit: "g",   wasteBuffer: 0 },
-      { ingredient: "Sugar",             qty: 150, unit: "g",   wasteBuffer: 0 },
+      { ingredient: "All-Purpose Flour", qty: 250, unit: "g", wasteBuffer: 2 },
+      { ingredient: "Eggs", qty: 3, unit: "pcs", wasteBuffer: 0 },
+      { ingredient: "Butter", qty: 100, unit: "g", wasteBuffer: 0 },
+      { ingredient: "Sugar", qty: 150, unit: "g", wasteBuffer: 0 },
     ],
   },
   {
@@ -134,8 +134,8 @@ export const semiFinishedGoods = [
     yieldQty: 500,
     yieldUnit: "ml",
     recipe: [
-      { ingredient: "Sugar",  qty: 200, unit: "g", wasteBuffer: 0 },
-      { ingredient: "Butter", qty: 50,  unit: "g", wasteBuffer: 0 },
+      { ingredient: "Sugar", qty: 200, unit: "g", wasteBuffer: 0 },
+      { ingredient: "Butter", qty: 50, unit: "g", wasteBuffer: 0 },
     ],
   },
   {
@@ -147,8 +147,13 @@ export const semiFinishedGoods = [
     // Roasted & rested in-house: best used within 7 days of roast for peak flavour
     shelfLifeDays: 7,
     recipe: [
-      { ingredient: "Arabica Gayo Beans",   qty: 300, unit: "g", wasteBuffer: 3 },
-      { ingredient: "African Robusta Beans", qty: 200, unit: "g", wasteBuffer: 3 },
+      { ingredient: "Arabica Gayo Beans", qty: 300, unit: "g", wasteBuffer: 3 },
+      {
+        ingredient: "African Robusta Beans",
+        qty: 200,
+        unit: "g",
+        wasteBuffer: 3,
+      },
     ],
   },
 ];

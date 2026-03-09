@@ -151,7 +151,7 @@ export function applyLiveStep(currentStock, step) {
       return { ...item, currentStock: newQty, status: newStatus };
     }
 
-    // Restock step: add to stock
+    // Restock step: add to stock + append new batch for expiry tracking
     if (step.type === "restock" && step.additions) {
       const a = step.additions.find((a) => a.ingredient === item.name);
       if (!a) return item;
@@ -160,7 +160,20 @@ export function applyLiveStep(currentStock, step) {
         newQty === 0 ? "Out"
         : newQty < (item.lowThreshold || 200) ? "Low"
         : "OK";
-      return { ...item, currentStock: newQty, status: newStatus };
+      const today = new Date().toISOString().split("T")[0];
+      const newBatch = {
+        label: step.restock?.batchLabel || `Restock ${step.time}`,
+        amount: a.add,
+        unit: a.unit,
+        age: "Delivered today",
+        purchaseDate: today,
+      };
+      return {
+        ...item,
+        currentStock: newQty,
+        status: newStatus,
+        batches: [...(item.batches || []), newBatch],
+      };
     }
 
     return item;

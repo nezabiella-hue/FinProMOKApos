@@ -151,7 +151,7 @@ export const inventoryItems = [
     usedBy: ["Iced Americano"],
     lastOpname: "3 days ago",
     packagingUnit: { label: "bag", size: 50, unitLabel: "pcs" },
-    shelfLifeDays: 1,
+    shelfLifeDays: null, // refreezes easily — no meaningful expiry tracked
     batches: [
       { label: "Batch A", amount: 200, unit: "pcs", age: "Made today", purchaseDate: daysAgo(0) },
     ],
