@@ -20,7 +20,7 @@ import "../App.css";
 
 const TABS = ["Dish List", "Planning"];
 
-export default function Production({ stock, liveStep, onLiveUpdate, onLowServingWarn }) {
+export default function Production({ stock, liveStep, onLiveUpdate, onLowServingWarn, onReallocationNotify }) {
   const [activeTab, setActiveTab] = useState("Dish List");
   const [dishes, setDishes] = useState(initialDishes);
   const [detailDish, setDetailDish] = useState(null);
@@ -125,6 +125,7 @@ export default function Production({ stock, liveStep, onLiveUpdate, onLowServing
           overrides={allocationOverrides}
           onConfirm={handleReallocateConfirm}
           onClose={() => setReallocateDish(null)}
+          onNotify={onReallocationNotify}
         />
       )}
     </div>

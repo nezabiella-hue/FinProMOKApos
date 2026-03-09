@@ -1893,3 +1893,150 @@
   border-color: #6ee7b7;
   background: #f0fdf4;
 }
+
+.po-custom-input--wide { flex: 1; min-width: 0; }
+.po-custom-input--sm   { width: 80px; }
+
+/* Applied AI badge */
+.po-applied-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  color: #1d4ed8;
+}
+
+/* Days-of-stock pill */
+.po-days {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.po-days--critical { background: #fee2e2; color: #991b1b; }
+.po-days--warn     { background: #fffbeb; color: #92400e; }
+.po-days--ok       { background: #f0fdf4; color: #166534; }
+
+/* Cost text */
+.po-cost {
+  font-size: 0.83rem;
+  color: #374151;
+}
+
+/* Custom item add section */
+.po-custom-section {
+  padding: 0.85rem 1.5rem 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.po-custom-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.35rem;
+}
+
+.po-custom-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.6rem;
+}
+
+/* Remove button in custom list */
+.po-remove-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+.po-remove-btn:hover { color: #dc2626; }
+
+/* Chat states */
+.po-chat-empty {
+  color: #9ca3af;
+  font-size: 0.82rem;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.po-chat-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: #6b7280;
+  font-style: italic;
+  padding: 0.25rem 0;
+}
+
+.po-chat-error {
+  font-size: 0.82rem;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 0.45rem 0.7rem;
+}
+
+/* Follow-up row */
+.po-chat-follow {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.po-send-btn {
+  padding: 0.4rem 0.6rem;
+  flex-shrink: 0;
+}
+
+/* Rec card internals */
+.po-rec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.po-rec-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.2rem;
+  font-size: 0.83rem;
+}
+
+.po-rec-qty {
+  font-size: 0.8rem;
+  color: #374151;
+  margin-bottom: 0.1rem;
+}
+
+.po-rec-reason {
+  font-size: 0.76rem;
+  color: #6b7280;
+}
+
+/* Purchase summary total row */
+.po-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0 0;
+  margin-top: 0.25rem;
+  border-top: 1px solid #e5e7eb;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: #111827;
+}

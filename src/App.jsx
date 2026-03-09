@@ -40,6 +40,10 @@ export default function App() {
     setToast({ message: `Boss has been notified that ${dishNames.join(", ")} ${dishNames.length > 1 ? "are" : "is"} running low on servings.` });
   };
 
+  const handleReallocationNotify = (dishName) => {
+    setToast({ message: `Boss has been notified of ingredient allocation for ${dishName}.` });
+  };
+
   return (
     <div className="app-layout">
       <Sidebar />
@@ -68,6 +72,7 @@ export default function App() {
                 liveStep={liveStep}
                 onLiveUpdate={handleLiveUpdate}
                 onLowServingWarn={handleLowServingWarn}
+                onReallocationNotify={handleReallocationNotify}
               />
             }
           />
