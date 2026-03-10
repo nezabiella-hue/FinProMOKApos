@@ -15,6 +15,13 @@ export default function App() {
   const [stock, setStock] = useState(inventoryItems);
   const [liveStep, setLiveStep] = useState(0);
   const [toast, setToast] = useState(null); // { message, type }
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   // Auto-dismiss toast after 4 seconds
   useEffect(() => {
@@ -43,6 +50,28 @@ export default function App() {
   const handleReallocationNotify = (dishName) => {
     setToast({ message: `Boss has been notified of ingredient allocation for ${dishName}.` });
   };
+
+  if (isMobile) return (
+    <div style={{
+      minHeight: "100dvh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      textAlign: "center",
+      padding: "2rem",
+      background: "#f4f7f4",
+      gap: "1rem",
+    }}>
+      <div style={{ fontSize: "3rem" }}>🖥️</div>
+      <h1 style={{ fontSize: "1.3rem", fontWeight: 700, color: "#1a3c2e", margin: 0 }}>
+        MOKAI works best on a larger screen
+      </h1>
+      <p style={{ fontSize: "0.95rem", color: "#6b7280", maxWidth: "280px", margin: 0, lineHeight: 1.6 }}>
+        Please open this app on a <strong>desktop</strong> or <strong>tablet</strong> for the full experience.
+      </p>
+    </div>
+  );
 
   return (
     <div className="app-layout">
